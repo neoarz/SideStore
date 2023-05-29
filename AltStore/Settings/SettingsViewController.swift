@@ -73,6 +73,7 @@ extension SettingsViewController
         case anisetteServers
         case advancedSettings
     
+        case responseCaching
     }
 }
 
@@ -95,6 +96,7 @@ final class SettingsViewController: UITableViewController
     
     @IBOutlet private var refreshSideJITServer: UILabel!
     @IBOutlet private var enforceThreeAppLimitSwitch: UISwitch!
+    @IBOutlet private var disableResponseCachingSwitch: UISwitch!
     
     @IBOutlet private var versionLabel: UILabel!
     
@@ -216,6 +218,7 @@ private extension SettingsViewController
         self.noIdleTimeoutSwitch.isOn = UserDefaults.standard.isIdleTimeoutDisableEnabled
         self.disableAppLimitSwitch.isOn = UserDefaults.standard.isAppLimitDisabled
         self.enforceThreeAppLimitSwitch.isOn = !UserDefaults.standard.ignoreActiveAppsLimit
+        self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         
         if self.isViewLoaded
         {
@@ -397,6 +400,11 @@ private extension SettingsViewController
         {
             UserDefaults.standard.activeAppsLimit = InstalledApp.freeAccountActiveAppsLimit
         }
+    }
+    
+    @IBAction func toggleDisableResponseCaching(_ sender: UISwitch)
+    {
+        UserDefaults.standard.responseCachingDisabled = sender.isOn
     }
     
     @IBAction func addRefreshAppsShortcut()
@@ -858,7 +866,7 @@ extension SettingsViewController
                 } else {
                     ELOG("UIApplication.openSettingsURLString invalid")
                 }
-            case .refreshAttempts, .errorLog: break
+            case .refreshAttempts, .errorLog, .responseCaching: break
 
             }
             
