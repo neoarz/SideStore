@@ -22,6 +22,7 @@ extension SettingsViewController
         case signIn
         case account
         case patreon
+        case display
         case appRefresh
         case instructions
         case techyThings
@@ -300,6 +301,17 @@ private extension SettingsViewController
             {
                 settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow SideStore to keep your device awake during a refresh or install of any apps.", comment: "")
             }
+            
+        case .display:
+            if isHeader
+            {
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("DISPLAY", comment: "")
+            }
+            else
+            {
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your AltStore experience by choosing an alternate app icon.", comment: "")
+            }
+            
             
         case .instructions:
             break
@@ -650,7 +662,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
         case .account where self.activeTeam == nil: return nil
-        case .signIn, .account, .patreon, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
             let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(headerView, for: section, isHeader: true)
             return headerView
@@ -666,7 +678,7 @@ extension SettingsViewController
         {
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
-        case .signIn, .patreon, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
             let footerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(footerView, for: section, isHeader: false)
             return footerView
@@ -683,7 +695,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0
-        case .signIn, .account, .patreon, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: true)
             return height
             
@@ -699,7 +711,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0            
-        case .signIn, .patreon, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: false)
             return height
             
@@ -948,7 +960,7 @@ extension SettingsViewController
 
             }
             
-        case .account, .patreon, .instructions, .macDirtyCow: break
+        case .account, .patreon, .display, .instructions, .macDirtyCow: break
         }
     }
 }
