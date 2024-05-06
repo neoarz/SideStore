@@ -157,7 +157,7 @@ final class MyAppsViewController: UICollectionViewController
     }
     var minimuxerStatus: Bool {
         guard minimuxer.ready() else {
-            ToastView(error: (OperationError.noWiFi as NSError).withLocalizedTitle("No WiFi!")).show(in: self)
+            ToastView(error: (OperationError.noWiFi as NSError).withLocalizedTitle("No WiFi or VPN!")).show(in: self)
             return false
         }
         return true
