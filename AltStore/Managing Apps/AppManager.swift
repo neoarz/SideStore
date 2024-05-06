@@ -317,6 +317,31 @@ extension AppManager
         
         self.run([clearAppCacheOperation], context: nil)
     }
+
+    func log(_ error: Error, operation: LoggedError.Operation, app: AppProtocol)
+    {
+        // Sanitize NSError on same thread before performing background task.
+        let sanitizedError = (error as NSError).sanitizedForSerialization()
+
+        DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
+            var app = app
+            if let managedApp = app as? NSManagedObject, let tempApp = context.object(with: managedApp.objectID) as? AppProtocol
+            {
+                app = tempApp
+            }
+
+            do
+            {
+                _ = LoggedError(error: sanitizedError, app: app, operation: operation, context: context)
+                try context.save()
+            }
+            catch let saveError
+            {
+                print("[ALTLog] Failed to log error \(sanitizedError.domain) code \(sanitizedError.code) for \(app.bundleIdentifier):", saveError)
+            }
+        }
+    }
+
 }
 
 extension AppManager
@@ -680,13 +705,20 @@ extension AppManager
             var installedApp: InstalledApp?
         }
         
+        let appName = installedApp.name
         let context = Context()
         context.installedApp = installedApp
         
         
         let enableJITOperation = EnableJITOperation(context: context)
         enableJITOperation.resultHandler = { (result) in
-            completionHandler(result)
+            switch result {
+            case .success: completionHandler(.success(()))
+            case .failure(let nsError as NSError):
+                let localizedTitle = String(format: NSLocalizedString("Failed to enable JIT for %@", comment: ""), appName)
+                let error = nsError.withLocalizedTitle(localizedTitle)
+                self.log(error, operation: .enableJIT, app: installedApp)
+            }
         }
         
         self.run([enableJITOperation], context: context, requiresSerialQueue: true)
@@ -821,6 +853,18 @@ private extension AppManager
             }
             
             return bundleIdentifier
+        }
+
+        var loggedErrorOperation: LoggedError.Operation {
+            switch self {
+            case .install: return .install
+            case .update: return .update
+            case .refresh: return .refresh
+            case .activate: return .activate
+            case .deactivate: return .deactivate
+            case .backup: return .backup
+            case .restore: return .restore
+            }
         }
     }
     
@@ -1722,7 +1766,7 @@ private extension AppManager
             let error = nsError.withLocalizedTitle(localizedTitle)
             group.set(.failure(error), forAppWithBundleIdentifier: operation.bundleIdentifier)
             
-            self.log(error, for: operation)
+            self.log(error, operation: operation.loggedErrorOperation, app: operation.app)
         }
     }
     
@@ -1747,43 +1791,7 @@ private extension AppManager
         UNUserNotificationCenter.current().add(request)
     }
     
-    func log(_ error: Error, for operation: AppOperation)
-    {
-        // Sanitize NSError on same thread before performing background task.
-        let sanitizedError = (error as NSError).sanitizedForSerialization()
-        
-        let loggedErrorOperation: LoggedError.Operation = {
-            switch operation
-            {
-            case .install: return .install
-            case .update: return .update
-            case .refresh: return .refresh
-            case .activate: return .activate
-            case .deactivate: return .deactivate
-            case .backup: return .backup
-            case .restore: return .restore
-            }
-        }()
-                    
-        DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
-            var app = operation.app
-            if let managedApp = app as? NSManagedObject, let tempApp = context.object(with: managedApp.objectID) as? AppProtocol
-            {
-                app = tempApp
-            }
-            
-            do
-            {
-                _ = LoggedError(error: sanitizedError, app: app, operation: loggedErrorOperation, context: context)
-                try context.save()
-            }
-            catch let saveError
-            {
-                print("[ALTLog] Failed to log error \(sanitizedError.domain) code \(sanitizedError.code) for \(app.bundleIdentifier):", saveError)
-            }
-        }
-    }
-    
+
     func run(_ operations: [Foundation.Operation], context: OperationContext?, requiresSerialQueue: Bool = false)
     {
         // Find "Install AltStore" operation if it already exists in `context`

@@ -1352,11 +1352,13 @@ private extension MyAppsViewController
     {
         if #available(iOS 17, *), !UserDefaults.standard.sidejitenable {
             let toastView = ToastView(error: OperationError.tooNewError)
+            AppManager.shared.log(OperationError.tooNewError, operation: .enableJIT, app: installedApp)
             toastView.show(in: self)
             return
         }
         if #unavailable(iOS 17), !minimuxer.ready() {
             let toastView = ToastView(error: MinimuxerError.NoConnection)
+            AppManager.shared.log(MinimuxerError.NoConnection, operation: .connection, app: installedApp)
             toastView.show(in: self)
             return
         }
