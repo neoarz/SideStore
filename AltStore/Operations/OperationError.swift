@@ -168,9 +168,9 @@ struct OperationError: ALTLocalizedError {
         case .unabletoconSideJITDevice: return NSLocalizedString("SideJITServer is unable to connect to your iDevice Please make sure you have paired your Device by doing 'SideJITServer -y' or try Refreshing SideJITServer from Settings", comment: "")
         case .wrongIP: return NSLocalizedString("Incorrect SideJITServer IP Please make sure that you are on the Samw Wifi as SideJITServer", comment: "")
         case .refreshsidejit: return NSLocalizedString("Unable to find App Please try Refreshing SideJITServer from Settings", comment: "")
-        case .anisetteV1Error: return NSLocalizedString("An error occurred when getting anisette data from a V1 server. Try using another anisette server.", comment: "")
-        case .provisioningError: return NSLocalizedString("An error occurred when provisioning: @@. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
-        case .anisetteV3Error: return NSLocalizedString("An error occurred when getting anisette data from a V3 server. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
+        case .anisetteV1Error: return NSLocalizedString("An error occurred when getting anisette data from a V1 server: %@. Try using another anisette server.", comment: "")
+        case .provisioningError: return NSLocalizedString("An error occurred when provisioning: %@ %@. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
+        case .anisetteV3Error: return NSLocalizedString("An error occurred when getting anisette data from a V3 server: %@. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
         case .cacheClearError: return NSLocalizedString("An error occurred while clearing cache: %@", comment: "")
         }
     }
