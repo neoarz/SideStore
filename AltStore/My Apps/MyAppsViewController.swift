@@ -535,11 +535,9 @@ private extension MyAppsViewController
                 
                 guard !failures.isEmpty else { return }
                 
-                let toastView: ToastView
-                
                 if let failure = failures.first, results.count == 1
                 {
-                    toastView = ToastView(error: failure.value)
+                    ToastView(error: failure.value).show(in: self)
                 }
                 else
                 {
@@ -557,11 +555,10 @@ private extension MyAppsViewController
                     let error = failures.first?.value as NSError?
                     let detailText = error?.localizedFailure ?? error?.localizedFailureReason ?? error?.localizedDescription
                     
-                    toastView = ToastView(text: localizedText, detailText: detailText)
+                    let toastView = ToastView(text: localizedText, detailText: detailText, opensLog: true)
                     toastView.preferredDuration = 4.0
+                    toastView.show(in: self)
                 }
-                
-                toastView.show(in: self)
             }
             
             self.refreshGroup = nil
@@ -697,8 +694,7 @@ private extension MyAppsViewController
                     self.collectionView.reloadItems(at: [indexPath])
                     
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                     
                     self.collectionView.reloadItems(at: [indexPath])
                     
@@ -899,9 +895,8 @@ private extension MyAppsViewController
                     completion(.failure((OperationError.cancelled)))
                     
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
-                    
+                    ToastView(error: error, opensLog: true).show(in: self)
+
                     completion(.failure(error))
                 }
             }
@@ -1015,8 +1010,7 @@ private extension MyAppsViewController
         UIApplication.shared.open(installedApp.openAppURL) { success in
             guard !success else { return }
             
-            let toastView = ToastView(error: OperationError.openAppFailed(name: installedApp.name))
-            toastView.show(in: self)
+            ToastView(error: OperationError.openAppFailed(name: installedApp.name), opensLog: true).show(in: self)
         }
     }
     
@@ -1067,8 +1061,7 @@ private extension MyAppsViewController
                 DispatchQueue.main.async {
                     installedApp.isActive = false
                     
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
         }
@@ -1141,8 +1134,7 @@ private extension MyAppsViewController
                 DispatchQueue.main.async {
                     installedApp.isActive = true
                     
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
             
@@ -1173,8 +1165,7 @@ private extension MyAppsViewController
                 case .success: break
                 case .failure(let error):
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: self)
                     }
                 }
             }
@@ -1208,9 +1199,8 @@ private extension MyAppsViewController
                     print("Failed to back up app:", error)
                     
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
-                        
+                        ToastView(error: error, opensLog: true).show(in: self)
+
                         self.collectionView.reloadSections([Section.activeApps.rawValue, Section.inactiveApps.rawValue])
                     }
                 }
@@ -1245,8 +1235,7 @@ private extension MyAppsViewController
                     print("Failed to restore app:", error)
                     
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: self)
                     }
                 }
             }
@@ -1321,8 +1310,7 @@ private extension MyAppsViewController
                 print("Failed to change app icon.", error)
                 
                 DispatchQueue.main.async {
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
         }
@@ -1334,9 +1322,8 @@ private extension MyAppsViewController
         guard minimuxerStatus else { return }
 
         if #available(iOS 17, *) {
-            let toastView = ToastView(error: (OperationError.tooNewError as NSError).withLocalizedTitle("No iOS 17 On Device JIT!"))
+            ToastView(error: (OperationError.tooNewError as NSError).withLocalizedTitle("No iOS 17 On Device JIT!"), opensLog: true).show(in: self)
             AppManager.shared.log(OperationError.tooNewError, operation: .enableJIT, app: installedApp)
-            toastView.show(in: self)
             return
         }
         
@@ -1346,8 +1333,8 @@ private extension MyAppsViewController
                 {
                 case .success: break
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self.navigationController?.view ?? self.view, duration: 5)
+                    ToastView(error: error, opensLog: true).show(in: self)
+                    AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
                 }
             }
         }

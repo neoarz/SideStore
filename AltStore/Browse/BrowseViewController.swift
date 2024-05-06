@@ -278,7 +278,7 @@ private extension BrowseViewController
                 {
                 case .failure(OperationError.cancelled): break // Ignore
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
+                    let toastView = ToastView(error: error, opensLog: true)
                     toastView.show(in: self)
                 
                 case .success: print("Installed app:", app.bundleIdentifier)

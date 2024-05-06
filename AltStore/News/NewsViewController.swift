@@ -313,9 +313,8 @@ private extension NewsViewController
                 {
                 case .failure(OperationError.cancelled): break // Ignore
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
-                    
+                    ToastView(error: error, opensLog: true).show(in: self)
+
                 case .success: print("Installed app:", storeApp.bundleIdentifier)
                 }
                 

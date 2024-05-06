@@ -510,7 +510,7 @@ extension AppViewController
             catch
             {
                 DispatchQueue.main.async {
-                    let toastView = ToastView(error: error)
+                    let toastView = ToastView(error: error, opensLog: true)
                     toastView.show(in: self)
                 }
             }
