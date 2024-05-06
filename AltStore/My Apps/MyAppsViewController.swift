@@ -155,6 +155,13 @@ final class MyAppsViewController: UICollectionViewController
     @IBAction func unwindToMyAppsViewController(_ segue: UIStoryboardSegue)
     {
     }
+    var minimuxerStatus: Bool {
+        guard minimuxer.ready() else {
+            ToastView(error: (OperationError.noWiFi as NSError).withLocalizedTitle("No WiFi!")).show(in: self)
+            return false
+        }
+        return true
+    }
 }
 
 private extension MyAppsViewController
@@ -645,11 +652,7 @@ private extension MyAppsViewController
     
     @IBAction func refreshAllApps(_ sender: UIBarButtonItem)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
 
         self.isRefreshingAllApps = true
         self.collectionView.collectionViewLayout.invalidateLayout()
@@ -713,11 +716,7 @@ private extension MyAppsViewController
     
     @IBAction func sideloadApp(_ sender: UIBarButtonItem)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
 
         let supportedTypes = UTType.types(tag: "ipa", tagClass: .filenameExtension, conformingTo: nil)
         
@@ -1023,11 +1022,7 @@ private extension MyAppsViewController
     
     func refresh(_ installedApp: InstalledApp)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
 
         let previousProgress = AppManager.shared.refreshProgress(for: installedApp)
         guard previousProgress == nil else {
@@ -1050,11 +1045,7 @@ private extension MyAppsViewController
     
     func activate(_ installedApp: InstalledApp)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
 
         func finish(_ result: Result<InstalledApp, Error>)
         {
@@ -1131,12 +1122,8 @@ private extension MyAppsViewController
     
     func deactivate(_ installedApp: InstalledApp, completionHandler: ((Result<InstalledApp, Error>) -> Void)? = nil)
     {
-        guard installedApp.isActive else { return }
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard installedApp.isActive, minimuxerStatus else { return }
+
         installedApp.isActive = false
         
         AppManager.shared.deactivate(installedApp, presentingViewController: self) { (result) in
@@ -1198,11 +1185,8 @@ private extension MyAppsViewController
     
     func backup(_ installedApp: InstalledApp)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
+
         let title = NSLocalizedString("Start Backup?", comment: "")
         let message = NSLocalizedString("This will replace any previous backups. Please leave SideStore open until the backup is complete.", comment: "")
 
@@ -1242,11 +1226,8 @@ private extension MyAppsViewController
     
     func restore(_ installedApp: InstalledApp)
     {
-        if !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            toastView.show(in: self)
-            return
-        }
+        guard minimuxerStatus else { return }
+
         let message = String(format: NSLocalizedString("This will replace all data you currently have in %@.", comment: ""), installedApp.name)
         let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to restore this backup?", comment: ""), message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)
@@ -1350,15 +1331,11 @@ private extension MyAppsViewController
     @available(iOS 14, *)
     func enableJIT(for installedApp: InstalledApp)
     {
-        if #available(iOS 17, *), !UserDefaults.standard.sidejitenable {
-            let toastView = ToastView(error: OperationError.tooNewError)
+        guard minimuxerStatus else { return }
+
+        if #available(iOS 17, *) {
+            let toastView = ToastView(error: (OperationError.tooNewError as NSError).withLocalizedTitle("No iOS 17 On Device JIT!"))
             AppManager.shared.log(OperationError.tooNewError, operation: .enableJIT, app: installedApp)
-            toastView.show(in: self)
-            return
-        }
-        if #unavailable(iOS 17), !minimuxer.ready() {
-            let toastView = ToastView(error: MinimuxerError.NoConnection)
-            AppManager.shared.log(MinimuxerError.NoConnection, operation: .connection, app: installedApp)
             toastView.show(in: self)
             return
         }

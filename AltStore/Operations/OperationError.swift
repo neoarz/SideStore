@@ -56,7 +56,7 @@ extension OperationError
     static let noSources: OperationError = .init(code: .noSources)
     static let missingAppGroup: OperationError = .init(code: .missingAppGroup)
 
-    static let noWiFi: OperationError = .init(code: .missingAppGroup)
+    static let noWiFi: OperationError = .init(code: .noWiFi)
     static let tooNewError: OperationError = .init(code: .tooNewError)
     static let provisioningError: OperationError = .init(code: .provisioningError)
     static let anisetteV1Error: OperationError = .init(code: .anisetteV1Error)
