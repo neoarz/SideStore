@@ -38,8 +38,8 @@ final class RefreshAppOperation: ResultOperation<InstalledApp>
             if let error = self.context.error { return self.finish(.failure(error)) }
             
             guard let profiles = self.context.provisioningProfiles else { return self.finish(.failure(OperationError.invalidParameters)) }
-            guard let app = self.context.app else { return self.finish(.failure(OperationError.appNotFound)) }
-            
+            guard let app = self.context.app else { return self.finish(.failure(OperationError(.appNotFound(name: nil)))) }
+
             for p in profiles {
                 do {
                     let bytes = p.value.data.toRustByteSlice()
@@ -49,14 +49,13 @@ final class RefreshAppOperation: ResultOperation<InstalledApp>
                 }
 
                 DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
-                print("Sending refresh app request...")
                     
                     self.progress.completedUnitCount += 1
                     
                     let predicate = NSPredicate(format: "%K == %@", #keyPath(InstalledApp.bundleIdentifier), app.bundleIdentifier)
                     self.managedObjectContext.perform {
                         guard let installedApp = InstalledApp.first(satisfying: predicate, in: self.managedObjectContext) else {
-                            self.finish(.failure(OperationError.appNotFound))
+                            self.finish(.failure(OperationError(.appNotFound(name: app.name))))
                             return
                         }
                         installedApp.update(provisioningProfile: p.value)

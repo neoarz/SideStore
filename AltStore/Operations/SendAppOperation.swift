@@ -57,7 +57,7 @@ final class SendAppOperation: ResultOperation<()>
             }
         } else {
             print("IPA doesn't exist????")
-            self.finish(.failure(OperationError.appNotFound))
+            self.finish(.failure(OperationError(.appNotFound(name: resignedApp.name))))
         }
     }
 }

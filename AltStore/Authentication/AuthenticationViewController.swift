@@ -108,8 +108,8 @@ private extension AuthenticationViewController
                 
             case .failure(let error as NSError):
                 DispatchQueue.main.async {
-                    let error = error.withLocalizedFailure(NSLocalizedString("Failed to Log In", comment: ""))
-                    
+                    let error = error.withLocalizedTitle(NSLocalizedString("Failed to Log In", comment: ""))
+
                     let toastView = ToastView(error: error)
                     toastView.textLabel.textColor = .altPink
                     toastView.detailTextLabel.textColor = .altPink

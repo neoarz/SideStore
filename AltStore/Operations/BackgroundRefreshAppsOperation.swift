@@ -13,11 +13,12 @@ import AltStoreCore
 import EmotionalDamage
 import minimuxer
 
-enum RefreshError: LocalizedError
+typealias RefreshError = RefreshErrorCode.Error
+enum RefreshErrorCode: Int, ALTErrorEnum, CaseIterable
 {
     case noInstalledApps
     
-    var errorDescription: String? {
+    var errorFailureReason: String {
         switch self
         {
         case .noInstalledApps: return NSLocalizedString("No active apps require refreshing.", comment: "")
@@ -94,7 +95,7 @@ final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<Inst
         super.main()
         
         guard !self.installedApps.isEmpty else {
-            self.finish(.failure(RefreshError.noInstalledApps))
+            self.finish(.failure(RefreshError(.noInstalledApps)))
             return
         }
         start_em_proxy(bind_addr: Consts.Proxy.serverURL)
@@ -202,7 +203,7 @@ private extension BackgroundRefreshAppsOperation
             
             let content = UNMutableNotificationContent()
             
-            var shouldPresentAlert = false
+            var shouldPresentAlert = true
             
             do
             {
@@ -218,20 +219,18 @@ private extension BackgroundRefreshAppsOperation
                 content.title = NSLocalizedString("Refreshed Apps", comment: "")
                 content.body = NSLocalizedString("All apps have been refreshed.", comment: "")
             }
-            catch RefreshError.noInstalledApps
+            catch ~OperationError.Code.noWiFi, ~RefreshErrorCode.noInstalledApps
             {
                 shouldPresentAlert = false
             }
             catch
             {
                 print("Failed to refresh apps in background.", error)
-                
+
                 content.title = NSLocalizedString("Failed to Refresh Apps", comment: "")
                 content.body = error.localizedDescription
-                
-                shouldPresentAlert = false
             }
-            
+
             if shouldPresentAlert
             {
                 let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay + 1, repeats: false)

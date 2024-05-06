@@ -369,7 +369,7 @@ extension AppManager
                     case .success(let source): fetchedSources.insert(source)
                     case .failure(let error):
                         let source = managedObjectContext.object(with: source.objectID) as! Source
-                        source.error = (error as NSError).sanitizedForCoreData()
+                        source.error = (error as NSError).sanitizedForSerialization()
                         errors[source] = error
                     }
                     
@@ -457,7 +457,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw context.error ?? OperationError.unknown }
+                guard let result = results.values.first else { throw context.error ?? OperationError.unknown() }
                 completionHandler(result)
             }
             catch
@@ -476,7 +476,7 @@ extension AppManager
     func update(_ app: InstalledApp, presentingViewController: UIViewController?, context: AuthenticatedOperationContext = AuthenticatedOperationContext(), completionHandler: @escaping (Result<InstalledApp, Error>) -> Void) -> Progress
     {
         guard let storeApp = app.storeApp else {
-            completionHandler(.failure(OperationError.appNotFound))
+            completionHandler(.failure(OperationError.appNotFound(name: app.name)))
             return Progress.discreteProgress(totalUnitCount: 1)
         }
         
@@ -484,7 +484,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
+                guard let result = results.values.first else { throw OperationError.unknown() }
                 completionHandler(result)
             }
             catch
@@ -520,8 +520,8 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
-                
+                guard let result = results.values.first else { throw OperationError.unknown() }
+
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
                 
@@ -559,7 +559,7 @@ extension AppManager
             group.completionHandler = { (results) in
                 do
                 {
-                    guard let result = results.values.first else { throw OperationError.unknown }
+                    guard let result = results.values.first else { throw OperationError.unknown() }
 
                     let installedApp = try result.get()
                     assert(installedApp.managedObjectContext != nil)
@@ -585,8 +585,8 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
-                
+                guard let result = results.values.first else { throw OperationError.unknown() }
+
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
                 
@@ -610,7 +610,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
+                guard let result = results.values.first else { throw OperationError.unknown() }
                 
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
@@ -1269,7 +1269,7 @@ private extension AppManager
             case .success(let installedApp):
                 completionHandler(.success(installedApp))
                 
-            case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound):
+            case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound(name: app.name)):
                 // Fall back to installation if AltServer doesn't support newer provisioning profile requests,
                 // OR if the cached app could not be found and we may need to redownload it.
                 app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
@@ -1543,7 +1543,7 @@ private extension AppManager
         }
         
         guard let application = ALTApplication(fileURL: app.fileURL) else {
-            completionHandler(.failure(OperationError.appNotFound))
+            completionHandler(.failure(OperationError.appNotFound(name: app.name)))
             return progress
         }
         
@@ -1555,8 +1555,8 @@ private extension AppManager
                     let temporaryDirectoryURL = context.temporaryDirectory.appendingPathComponent("AltBackup-" + UUID().uuidString)
                     try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true, attributes: nil)
                     
-                    guard let altbackupFileURL = Bundle.main.url(forResource: "AltBackup", withExtension: "ipa") else { throw OperationError.appNotFound }
-                    
+                    guard let altbackupFileURL = Bundle.main.url(forResource: "AltBackup", withExtension: "ipa") else { throw OperationError.appNotFound(name: app.name) }
+
                     let unzippedAppBundleURL = try FileManager.default.unzipAppBundle(at: altbackupFileURL, toDirectory: temporaryDirectoryURL)
                     guard let unzippedAppBundle = Bundle(url: unzippedAppBundleURL) else { throw OperationError.invalidApp }
                     
@@ -1694,8 +1694,32 @@ private extension AppManager
             do { try installedApp.managedObjectContext?.save() }
             catch { print("Error saving installed app.", error) }
         }
-        catch
+        catch let nsError as NSError
         {
+            var appName: String!
+            if let app = operation.app as? (NSManagedObject & AppProtocol) {
+                if let context = app.managedObjectContext {
+                    context.performAndWait {
+                        appName = app.name
+                    }
+                } else {
+                    appName = NSLocalizedString("Unknown App", comment: "")
+                }
+            } else {
+                appName = operation.app.name
+            }
+
+            let localizedTitle: String
+            switch operation {
+            case .install: localizedTitle = String(format: NSLocalizedString("Failed to Install %@", comment: ""), appName)
+            case .refresh: localizedTitle = String(format: NSLocalizedString("Failed to Refresh %@", comment: ""), appName)
+            case .update: localizedTitle = String(format: NSLocalizedString("Failed to Update %@", comment: ""), appName)
+            case .activate: localizedTitle = String(format: NSLocalizedString("Failed to Activate %@", comment: ""), appName)
+            case .deactivate: localizedTitle = String(format: NSLocalizedString("Failed to Deactivate %@", comment: ""), appName)
+            case .backup: localizedTitle = String(format: NSLocalizedString("Failed to Backup %@", comment: ""), appName)
+            case .restore: localizedTitle = String(format: NSLocalizedString("Failed to Restore %@ Backup", comment: ""), appName)
+            }
+            let error = nsError.withLocalizedTitle(localizedTitle)
             group.set(.failure(error), forAppWithBundleIdentifier: operation.bundleIdentifier)
             
             self.log(error, for: operation)
@@ -1726,7 +1750,7 @@ private extension AppManager
     func log(_ error: Error, for operation: AppOperation)
     {
         // Sanitize NSError on same thread before performing background task.
-        let sanitizedError = (error as NSError).sanitizedForCoreData()
+        let sanitizedError = (error as NSError).sanitizedForSerialization()
         
         let loggedErrorOperation: LoggedError.Operation = {
             switch operation

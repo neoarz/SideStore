@@ -8,9 +8,16 @@
 
 #import "NSError+ALTServerError.h"
 
-NSErrorDomain const AltServerErrorDomain = @"com.rileytestut.AltServer";
-NSErrorDomain const AltServerInstallationErrorDomain = @"com.rileytestut.AltServer.Installation";
-NSErrorDomain const AltServerConnectionErrorDomain = @"com.rileytestut.AltServer.Connection";
+#if TARGET_OS_OSX
+#import "AltServer-Swift.h"
+#else
+#import "AltStoreCore/AltStoreCore-Swift.h"
+#endif
+
+NSErrorDomain const AltServerErrorDomain = @"AltServer.ServerError";
+NSErrorDomain const AltServerInstallationErrorDomain = @"AltServer.InstallationError";
+NSErrorDomain const AltServerConnectionErrorDomain = @"AltServer.ConnectionError";
+
 
 NSErrorUserInfoKey const ALTUnderlyingErrorDomainErrorKey = @"underlyingErrorDomain";
 NSErrorUserInfoKey const ALTUnderlyingErrorCodeErrorKey = @"underlyingErrorCode";
@@ -24,8 +31,16 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
 
 + (void)load
 {
-    [NSError setUserInfoValueProviderForDomain:AltServerErrorDomain provider:^id _Nullable(NSError * _Nonnull error, NSErrorUserInfoKey  _Nonnull userInfoKey) {
-        if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
+    [NSError alt_setUserInfoValueProviderForDomain:AltServerErrorDomain provider:^id _Nullable(NSError * _Nonnull error, NSErrorUserInfoKey _Nonnull userInfoKey) {
+        if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+        {
+            return [error altserver_localizedDescription];
+        }
+        else if ([userInfoKey isEqualToString:NSLocalizedFailureErrorKey])
+        {
+            return [error altserver_localizedFailure];
+        }
+        else if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
         {
             return [error altserver_localizedFailureReason];
         }
@@ -41,10 +56,10 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
         return nil;
     }];
     
-    [NSError setUserInfoValueProviderForDomain:AltServerConnectionErrorDomain provider:^id _Nullable(NSError * _Nonnull error, NSErrorUserInfoKey  _Nonnull userInfoKey) {
-        if ([userInfoKey isEqualToString:NSLocalizedDescriptionKey])
+    [NSError alt_setUserInfoValueProviderForDomain:AltServerConnectionErrorDomain provider:^id _Nullable(NSError * _Nonnull error, NSErrorUserInfoKey  _Nonnull userInfoKey) {
+        if ([userInfoKey isEqualToString:NSLocalizedFailureReasonErrorKey])
         {
-            return [error altserver_connection_localizedDescription];
+            return [error altserver_connection_localizedFailureReason];
         }
         else if ([userInfoKey isEqualToString:NSLocalizedRecoverySuggestionErrorKey])
         {
@@ -53,6 +68,53 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
         
         return nil;
     }];
+}
+
+- (nullable NSString *)altserver_localizedDescription
+{
+    switch ((ALTServerError)self.code)
+    {
+        case ALTServerErrorUnderlyingError:
+        {
+            // We're wrapping another error, so return the wrapped error's localized description.
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            return underlyingError.localizedDescription;
+        }
+
+        default:
+            return nil;
+    }
+}
+
+- (nullable NSString *)altserver_localizedFailure
+{
+    switch ((ALTServerError)self.code)
+    {
+        case ALTServerErrorUnderlyingError:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            return underlyingError.alt_localizedFailure;
+        }
+
+        case ALTServerErrorConnectionFailed:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            if (underlyingError.localizedFailureReason != nil)
+            {
+                // Only return localized failure if there is an underlying error with failure reason.
+#if TARGET_OS_OSX
+                return NSLocalizedString(@"There was an error connecting to the device.", @"");
+#else
+                return NSLocalizedString(@"AltServer could not establish a connection to SideStore.", @"");
+#endif
+            }
+
+            return nil;
+        }
+
+        default:
+            return nil;
+    }
 }
 
 - (nullable NSString *)altserver_localizedFailureReason
@@ -80,12 +142,21 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
             return NSLocalizedString(@"An unknown error occured.", @"");
             
         case ALTServerErrorConnectionFailed:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            if (underlyingError.localizedFailureReason != nil)
+            {
+                return underlyingError.localizedFailureReason;
+            }
+
+            // Return fallback failure reason if there isn't an underlying error with failure reason.
 #if TARGET_OS_OSX
             return NSLocalizedString(@"There was an error connecting to the device.", @"");
 #else
             return NSLocalizedString(@"Could not connect to SideStore.", @"");
 #endif
-            
+        }
+
         case ALTServerErrorLostConnection:
             return NSLocalizedString(@"Lost connection to SideStore.", @"");
             
@@ -93,8 +164,8 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
             return NSLocalizedString(@"SideStore could not find this device.", @"");
             
         case ALTServerErrorDeviceWriteFailed:
-            return NSLocalizedString(@"Failed to write app data to device.", @"");
-            
+            return NSLocalizedString(@"SideStore could not write data to this device.", @"");
+
         case ALTServerErrorInvalidRequest:
             return NSLocalizedString(@"SideStore received an invalid request.", @"");
             
@@ -102,14 +173,20 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
             return NSLocalizedString(@"SideStore sent an invalid response.", @"");
             
         case ALTServerErrorInvalidApp:
-            return NSLocalizedString(@"The app is invalid.", @"");
-            
+            return NSLocalizedString(@"The app is in an invalid format.", @"");
+
         case ALTServerErrorInstallationFailed:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            if (underlyingError != nil) {
+                return underlyingError.localizedFailureReason ?: underlyingError.localizedDescription;
+            }
             return NSLocalizedString(@"An error occured while installing the app.", @"");
-            
+        }
+
         case ALTServerErrorMaximumFreeAppLimitReached:
-            return NSLocalizedString(@"Cannot activate more than 3 apps with a non-developer Apple ID.", @"");
-            
+            return NSLocalizedString(@"You cannot activate more than 3 apps with a non-developer Apple ID.", @"");
+
         case ALTServerErrorUnsupportediOSVersion:
             return NSLocalizedString(@"Your device must be running iOS 12.2 or later to install SideStore.", @"");
             
@@ -117,8 +194,8 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
             return NSLocalizedString(@"SideStore does not support this request.", @"");
             
         case ALTServerErrorUnknownResponse:
-            return NSLocalizedString(@"Received an unknown response from SideStore.", @"");
-            
+            return NSLocalizedString(@"SideStore received an unknown response from SideStore.", @"");
+
         case ALTServerErrorInvalidAnisetteData:
             return NSLocalizedString(@"The provided anisette data is invalid.", @"");
             
@@ -153,7 +230,19 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
 {
     switch ((ALTServerError)self.code)
     {
+        case ALTServerErrorUnderlyingError:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            return underlyingError.localizedRecoverySuggestion;
+        }
         case ALTServerErrorConnectionFailed:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            if (underlyingError.localizedRecoverySuggestion != nil){
+                return underlyingError.localizedRecoverySuggestion;
+            }
+			// If there is no underlying error found, fall through to AltServerErrorDeviceNotFound
+        }
         case ALTServerErrorDeviceNotFound:
             return NSLocalizedString(@"Make sure you have trusted this device with your computer and Wi-Fi sync is enabled.", @"");
             
@@ -182,6 +271,13 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
 {
     switch ((ALTServerError)self.code)
     {
+        case ALTServerErrorUnderlyingError:
+        {
+            NSError *underlyingError = self.userInfo[NSUnderlyingErrorKey];
+            return underlyingError.alt_localizedDebugDescription;
+
+        }
+
         case ALTServerErrorIncompatibleDeveloperDisk:
         {
             NSString *path = self.userInfo[NSFilePathErrorKey];
@@ -191,7 +287,7 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
             }
 
             NSString *osVersion = [self altserver_osVersion] ?: NSLocalizedString(@"this device's OS version", @"");
-            NSString *debugDescription = [NSString stringWithFormat:NSLocalizedString(@"The Developer disk located at\n\n%@\n\nis incompatible with %@.", @""), path, osVersion];
+            NSString *debugDescription = [NSString stringWithFormat:NSLocalizedString(@"The Developer disk located at %@ is incompatible with %@.", @""), path, osVersion];
             return debugDescription;
         }
             
@@ -232,7 +328,7 @@ NSErrorUserInfoKey const ALTOperatingSystemVersionErrorKey = @"ALTOperatingSyste
 
 #pragma mark - AltServerConnectionErrorDomain -
 
-- (nullable NSString *)altserver_connection_localizedDescription
+- (nullable NSString *)altserver_connection_localizedFailureReason
 {
     switch ((ALTServerConnectionError)self.code)
     {
