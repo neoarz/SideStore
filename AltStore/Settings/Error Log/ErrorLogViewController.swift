@@ -112,8 +112,10 @@ private extension ErrorLogViewController
                 cell.menuButton.menu = menu
                 cell.menuButton.showsMenuAsPrimaryAction = self.isScrolling ? false : true
                 cell.selectionStyle = .none
+            } else {
+                cell.menuButton.isUserInteractionEnabled = false
             }
-            
+
             // Include errorDescriptionTextView's text in cell summary.
             cell.accessibilityLabel = [cell.errorFailureLabel.text, cell.dateLabel.text, cell.errorCodeLabel.text, cell.errorDescriptionTextView.text].compactMap { $0 }.joined(separator: ". ")
             
