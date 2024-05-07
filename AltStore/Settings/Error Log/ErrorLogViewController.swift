@@ -21,6 +21,13 @@ final class ErrorLogViewController: UITableViewController
     private lazy var dataSource = self.makeDataSource()
     private var expandedErrorIDs = Set<NSManagedObjectID>()
     
+    private var isScrolling = false {
+        didSet {
+            guard self.isScrolling != oldValue else { return }
+            self.updateButtonInteractivity()
+        }
+    }
+
     private lazy var timeFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .none
@@ -103,6 +110,7 @@ private extension ErrorLogViewController
                 ])
 
                 cell.menuButton.menu = menu
+                cell.menuButton.showsMenuAsPrimaryAction = self.isScrolling ? false : true
             }
             
             // Include errorDescriptionTextView's text in cell summary.
@@ -329,5 +337,41 @@ extension ErrorLogViewController: QLPreviewControllerDataSource {
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
         let fileURL = FileManager.default.documentsDirectory.appendingPathComponent("minimuxer.log")
         return fileURL as QLPreviewItem
+    }
+}
+
+extension ErrorLogViewController
+{
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView)
+    {
+        self.isScrolling = true
+    }
+
+    override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
+    {
+        self.isScrolling = false
+    }
+
+    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
+    {
+        guard !decelerate else { return }
+        self.isScrolling = false
+    }
+
+    private func updateButtonInteractivity()
+    {
+        guard #available(iOS 14, *) else { return }
+
+        for case let cell as ErrorLogTableViewCell in self.tableView.visibleCells
+        {
+            if self.isScrolling
+            {
+                cell.menuButton.showsMenuAsPrimaryAction = false
+            }
+            else
+            {
+                cell.menuButton.showsMenuAsPrimaryAction = true
+            }
+        }
     }
 }
