@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		03F06CD52942C27E001C4D68 /* Bundle+AltStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1E314122A05D4C00370A3C /* Bundle+AltStore.swift */; };
 		0E05025A2BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */; };
+		0E05025C2BEC947000879B5C /* String+SideStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E05025B2BEC947000879B5C /* String+SideStore.swift */; };
 		0E1A1F912AE36A9700364CAD /* bytearray.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E1A1F902AE36A9600364CAD /* bytearray.c */; };
 		0E764E172ADFF5740043DD4E /* AltBackup.ipa in Resources */ = {isa = PBXBuildFile; fileRef = 0E764E162ADFF5740043DD4E /* AltBackup.ipa */; };
 		0EA1665B2ADFE0D2003015C1 /* out-limd.c in Sources */ = {isa = PBXBuildFile; fileRef = 0EA166472ADFE0D1003015C1 /* out-limd.c */; };
@@ -506,6 +507,7 @@
 
 /* Begin PBXFileReference section */
 		0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OperatingSystemVersion+Comparable.swift"; sourceTree = "<group>"; };
+		0E05025B2BEC947000879B5C /* String+SideStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SideStore.swift"; sourceTree = "<group>"; };
 		0E1A1F902AE36A9600364CAD /* bytearray.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = bytearray.c; path = src/bytearray.c; sourceTree = "<group>"; };
 		0E764E162ADFF5740043DD4E /* AltBackup.ipa */ = {isa = PBXFileReference; lastKnownFileType = file; name = AltBackup.ipa; path = AltStore/Resources/AltBackup.ipa; sourceTree = SOURCE_ROOT; };
 		0EA166412ADFE0D1003015C1 /* jplist.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = jplist.c; path = Dependencies/libplist/src/jplist.c; sourceTree = SOURCE_ROOT; };
@@ -1419,6 +1421,7 @@
 				BF66EEE42501AED0007EE018 /* UserDefaults+AltStore.swift */,
 				BF6A531F246DC1B0004F59C8 /* FileManager+SharedDirectories.swift */,
 				0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */,
+				0E05025B2BEC947000879B5C /* String+SideStore.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -2424,6 +2427,7 @@
 				BF66EE972501AEBC007EE018 /* ALTAppPermission.m in Sources */,
 				BFAECC552501B0A400528F27 /* Connection.swift in Sources */,
 				BF66EEDA2501AECA007EE018 /* RefreshAttempt.swift in Sources */,
+				0E05025C2BEC947000879B5C /* String+SideStore.swift in Sources */,
 				0EE7FDCB2BE8D12B00D1E390 /* ALTLocalizedError.swift in Sources */,
 				BF66EEA92501AEC5007EE018 /* Tier.swift in Sources */,
 				BF66EEDB2501AECA007EE018 /* StoreApp.swift in Sources */,

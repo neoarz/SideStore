@@ -30,7 +30,7 @@ extension VerificationError
         VerificationError(code: .mismatchedBundleIdentifiers, app: app, sourceBundleID: sourceBundleID)
     }
 
-    static func iOSVersionNotSupported(app: ALTApplication) -> VerificationError {
+    static func iOSVersionNotSupported(app: ALTApplication, osVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion, requiredOSVersion: OperatingSystemVersion?) -> VerificationError {
         VerificationError(code: .iOSVersionNotSupported, app: app)
     }
 }
@@ -41,38 +41,54 @@ struct VerificationError: ALTLocalizedError {
     var errorTitle: String?
     var errorFailure: String?
 
-    var app: ALTApplication?
+    @Managed var app: AppProtocol?
     var entitlements: [String: Any]?
     var sourceBundleID: String?
+    var deviceOSVersion: OperatingSystemVersion?
+    var requiredOSVersion: OperatingSystemVersion?
+    
+    var errorDescription: String? {
+        switch self.code {
+        case .iOSVersionNotSupported:
+            guard let deviceOSVersion else { return nil }
+
+            var failureReason = self.errorFailureReason
+            if self.app == nil {
+                let firstLetter = failureReason.prefix(1).lowercased()
+                failureReason = firstLetter + failureReason.dropFirst()
+            }
+
+            return String(formatted: "This device is running iOS %@, but %@", deviceOSVersion.stringValue, failureReason)
+        default: return nil
+        }
+    }
 
     var errorFailureReason: String {
         switch self.code
         {
         case .privateEntitlements:
-            let appName = (self.app?.name as String?).map { String(format: NSLocalizedString("'%@'", comment: ""), $0) } ??
-            	NSLocalizedString("Unknown app", comment: "")
-            return String(format: NSLocalizedString("“%@” requires private permissions.", comment: ""), appName)
+            let appName = self.$app.name ?? NSLocalizedString("The app", comment: "")
+            return String(formatted: "“%@” requires private permissions.", appName)
 
         case .mismatchedBundleIdentifiers:
-            if let app, let sourceBundleID {
-                return String(format: NSLocalizedString("The bundle ID '%@' does not match the one specified by the source ('%@').", comment: ""), app.bundleIdentifier, sourceBundleID)
+            if let appBundleID = self.$app.bundleIdentifier, let bundleID = self.sourceBundleID {
+                return String(formatted: "The bundle ID '%@' does not match the one specified by the source ('%@').", appBundleID, bundleID)
             } else {
                 return NSLocalizedString("The bundle ID does not match the one specified by the source.", comment: "")
             }
 
         case .iOSVersionNotSupported:
-            var failureReason: String!
-            if let app {
-                var version = "iOS \(app.minimumiOSVersion.majorVersion).\(app.minimumiOSVersion.minorVersion)"
-                if app.minimumiOSVersion.patchVersion > 0 {
-                    version += ".\(app.minimumiOSVersion.patchVersion)"
-                }
-                failureReason = String(format: NSLocalizedString("%@ requires %@.", comment: ""), app.name, version)
-            } else {
-                let version = ProcessInfo.processInfo.operatingSystemVersionString
-                failureReason = String(format: NSLocalizedString("This app does not support iOS %@.", comment: ""), version)
+            let appName = self.$app.name ?? NSLocalizedString("The app", comment: "")
+            let deviceOSVersion = self.deviceOSVersion ?? ProcessInfo.processInfo.operatingSystemVersion
+
+            guard let requiredOSVersion else {
+                return String(formatted: "%@ does not support iOS %@.", appName, deviceOSVersion.stringValue)
             }
-            return failureReason
+            if deviceOSVersion > requiredOSVersion {
+                return String(formatted: "%@ requires iOS %@ or earlier", appName, requiredOSVersion.stringValue)
+            } else {
+                return String(formatted: "%@ requires iOS %@ or later", appName, requiredOSVersion.stringValue)
+            }
         }
     }
 }
@@ -108,7 +124,7 @@ final class VerifyAppOperation: ResultOperation<Void>
             }
             
             guard ProcessInfo.processInfo.isOperatingSystemAtLeast(app.minimumiOSVersion) else {
-                throw VerificationError.iOSVersionNotSupported(app: app)
+                throw VerificationError.iOSVersionNotSupported(app: app, requiredOSVersion: app.minimumiOSVersion)
             }
             
             if #available(iOS 13.5, *)
@@ -190,8 +206,7 @@ private extension VerifyAppOperation
                 }))
                 presentingViewController.present(alertController, animated: true, completion: nil)
                 
-            case .mismatchedBundleIdentifiers: return completion(.failure(error))
-            case .iOSVersionNotSupported: return completion(.failure(error))
+            case .mismatchedBundleIdentifiers, .iOSVersionNotSupported: return completion(.failure(error))
             }
         }
     }
