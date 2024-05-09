@@ -62,14 +62,14 @@ public class InstalledApp: NSManagedObject, InstalledAppProtocol
     
     @objc public var hasUpdate: Bool {
         if self.storeApp == nil { return false }
-        if self.storeApp!.latestVersion == nil { return false }
-        
+        if self.storeApp!.latestSupportedVersion == nil { return false }
+
         let currentVersion = SemanticVersion(self.version)
-        let latestVersion = SemanticVersion(self.storeApp!.latestVersion!.version)
-        
+        let latestVersion = SemanticVersion(self.storeApp!.latestSupportedVersion!.version)
+
         if currentVersion == nil || latestVersion == nil {
             // One of the versions is not valid SemVer, fall back to comparing the version strings by character
-            return self.version < self.storeApp!.latestVersion!.version
+            return self.version < self.storeApp!.latestSupportedVersion!.version
         }
         
         return currentVersion! < latestVersion!

@@ -32,7 +32,6 @@ final class DownloadAppOperation: ResultOperation<ALTApplication>
 
         self.appName = app.name
         self.bundleIdentifier = app.bundleIdentifier
-        self.sourceURL = app.url
         self.destinationURL = destinationURL
 
         super.init()

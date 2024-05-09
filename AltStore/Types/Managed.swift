@@ -50,7 +50,7 @@ struct Managed<ManagedObject>
         
         return result
     }
-    
+
     // Optionals
     subscript<Wrapped, T>(dynamicMember keyPath: KeyPath<Wrapped, T>) -> T? where ManagedObject == Optional<Wrapped> {
         var result: T?
