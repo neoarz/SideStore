@@ -320,6 +320,10 @@ extension AppManager
 
     func log(_ error: Error, operation: LoggedError.Operation, app: AppProtocol)
     {
+        switch error {
+        case ~OperationError.Code.cancelled: return // Don't log cancelled events
+        default: break
+        }
         // Sanitize NSError on same thread before performing background task.
         let sanitizedError = (error as NSError).sanitizedForSerialization()
 
