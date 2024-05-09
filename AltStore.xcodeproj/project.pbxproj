@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		03F06CD52942C27E001C4D68 /* Bundle+AltStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1E314122A05D4C00370A3C /* Bundle+AltStore.swift */; };
+		0E05025A2BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */; };
 		0E1A1F912AE36A9700364CAD /* bytearray.c in Sources */ = {isa = PBXBuildFile; fileRef = 0E1A1F902AE36A9600364CAD /* bytearray.c */; };
 		0E764E172ADFF5740043DD4E /* AltBackup.ipa in Resources */ = {isa = PBXBuildFile; fileRef = 0E764E162ADFF5740043DD4E /* AltBackup.ipa */; };
 		0EA1665B2ADFE0D2003015C1 /* out-limd.c in Sources */ = {isa = PBXBuildFile; fileRef = 0EA166472ADFE0D1003015C1 /* out-limd.c */; };
@@ -504,6 +505,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OperatingSystemVersion+Comparable.swift"; sourceTree = "<group>"; };
 		0E1A1F902AE36A9600364CAD /* bytearray.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = bytearray.c; path = src/bytearray.c; sourceTree = "<group>"; };
 		0E764E162ADFF5740043DD4E /* AltBackup.ipa */ = {isa = PBXFileReference; lastKnownFileType = file; name = AltBackup.ipa; path = AltStore/Resources/AltBackup.ipa; sourceTree = SOURCE_ROOT; };
 		0EA166412ADFE0D1003015C1 /* jplist.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = jplist.c; path = Dependencies/libplist/src/jplist.c; sourceTree = SOURCE_ROOT; };
@@ -1416,6 +1418,7 @@
 				BF66EEE62501AED0007EE018 /* UIColor+Hex.swift */,
 				BF66EEE42501AED0007EE018 /* UserDefaults+AltStore.swift */,
 				BF6A531F246DC1B0004F59C8 /* FileManager+SharedDirectories.swift */,
+				0E0502592BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -2415,6 +2418,7 @@
 				BF66EE9D2501AEC1007EE018 /* AppProtocol.swift in Sources */,
 				BFC712C42512D5F100AB5EBE /* XPCConnection.swift in Sources */,
 				D5CA0C4B280E141900469595 /* ManagedPatron.swift in Sources */,
+				0E05025A2BEC83C500879B5C /* OperatingSystemVersion+Comparable.swift in Sources */,
 				BF66EE8C2501AEB2007EE018 /* Keychain.swift in Sources */,
 				BF66EED42501AECA007EE018 /* AltStore5ToAltStore6.xcmappingmodel in Sources */,
 				BF66EE972501AEBC007EE018 /* ALTAppPermission.m in Sources */,

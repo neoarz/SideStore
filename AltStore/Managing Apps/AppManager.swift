@@ -37,11 +37,6 @@ final class AppManagerPublisher: ObservableObject
     fileprivate(set) var refreshProgress = [String: Progress]()
 }
 
-private func ==(lhs: OperatingSystemVersion, rhs: OperatingSystemVersion) -> Bool
-{
-    return (lhs.majorVersion == rhs.majorVersion && lhs.minorVersion == rhs.minorVersion && lhs.patchVersion == rhs.patchVersion)
-}
-
 final class AppManager
 {
     static let shared = AppManager()
