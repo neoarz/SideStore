@@ -14,6 +14,7 @@ import Intents
 import Combine
 import WidgetKit
 
+import minimuxer
 import AltStoreCore
 import AltSign
 import Roxas
@@ -1105,7 +1106,9 @@ private extension AppManager
             switch result
             {
             case .failure(let error): context.error = error
-            case .success(let provisioningProfiles): context.provisioningProfiles = provisioningProfiles
+            case .success(let provisioningProfiles): 
+                context.provisioningProfiles = provisioningProfiles
+                print("PROVISIONING PROFILES \(context.provisioningProfiles)")
             }
         }
         fetchProvisioningProfilesOperation.addDependency(refreshAnisetteDataOperation)
@@ -1312,14 +1315,21 @@ private extension AppManager
             case .success(let installedApp):
                 completionHandler(.success(installedApp))
                 
+            case .failure(MinimuxerError.ProfileInstall):
+                completionHandler(.failure(OperationError.noWiFi))
+                
             case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound(name: app.name)):
                 // Fall back to installation if AltServer doesn't support newer provisioning profile requests,
                 // OR if the cached app could not be found and we may need to redownload it.
                 app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
-                    let installProgress = self._install(app, operation: operation, group: group) { (result) in
-                        completionHandler(result)
+                    if minimuxer.ready() {
+                        let installProgress = self._install(app, operation: operation, group: group) { (result) in
+                            completionHandler(result)
+                        }
+                        progress.addChild(installProgress, withPendingUnitCount: 40)
+                    } else {
+                        completionHandler(.failure(OperationError.noWiFi))
                     }
-                    progress.addChild(installProgress, withPendingUnitCount: 40)
                 }
                 
             case .failure(let error):

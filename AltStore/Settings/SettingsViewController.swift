@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SwiftUI
 import SafariServices
 import MessageUI
 import Intents
@@ -57,7 +58,7 @@ extension SettingsViewController
         case refreshSideJITServer
         case clearCache
         case resetPairingFile
-        case resetAdiPb
+        case anisetteServers
         case advancedSettings
     
     }
@@ -131,8 +132,14 @@ final class SettingsViewController: UITableViewController
         {
             versionString += "SideStore\t"
         }
-        self.versionLabel.text = NSLocalizedString(versionString, comment: "SideStore Version")
+        versionString += "\n\(Bundle.Info.appbundleIdentifier)"
 
+        self.versionLabel.text = NSLocalizedString(versionString, comment: "SideStore Version")
+        
+        self.versionLabel.numberOfLines = 0
+        self.versionLabel.lineBreakMode = .byWordWrapping
+        self.versionLabel.setNeedsUpdateConstraints()
+        
         self.tableView.contentInset.bottom = 40
         
         self.update()
@@ -150,6 +157,18 @@ final class SettingsViewController: UITableViewController
         
         self.update()
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "anisetteServers" {
+            let controller = UIHostingController(rootView: AnisetteServers(selected: UserDefaults.standard.menuAnisetteURL, errorCallback: {
+                ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in SideStore.").show(in: self)
+            }))
+            self.show(controller, sender: nil)
+        } else {
+            super.prepare(for: segue, sender: sender)
+        }
+    }
+
 }
 
 private extension SettingsViewController
@@ -447,14 +466,14 @@ extension SettingsViewController
     {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-//        if #available(iOS 14, *) {}
-//        else if let cell = cell as? InsetGroupTableViewCell,
-//                indexPath.section == Section.appRefresh.rawValue,
-//                indexPath.row == AppRefreshRow.backgroundRefresh.rawValue
-//        {
-//            // Only one row is visible pre-iOS 14.
-//            cell.style = .single
-//        }
+        if #available(iOS 14, *) {}
+        else if let cell = cell as? InsetGroupTableViewCell,
+                indexPath.section == Section.appRefresh.rawValue,
+                indexPath.row == AppRefreshRow.backgroundRefresh.rawValue
+        {
+            // Only one row is visible pre-iOS 14.
+            cell.style = .single
+        }
         
         if AppRefreshRow.AllCases().count == 1
         {
@@ -674,25 +693,11 @@ extension SettingsViewController
                 alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
                 self.present(alertController, animated: true)
                 self.tableView.deselectRow(at: indexPath, animated: true)
-            case .resetAdiPb:
-                let alertController = UIAlertController(
-                    title: NSLocalizedString("Are you sure you want to reset the adi.pb file?", comment: ""),
-                    message: NSLocalizedString("The adi.pb file is used to generate anisette data, which is required to log into an Apple ID. If you are having issues with account related things, you can try this. However, you will be required to do 2FA again. This will do nothing if you are using an older anisette server.", comment: ""),
-                    preferredStyle: UIAlertController.Style.actionSheet)
-                
-                alertController.addAction(UIAlertAction(title: NSLocalizedString("Reset adi.pb", comment: ""), style: .destructive){ _ in
-                    if Keychain.shared.adiPb != nil {
-                        Keychain.shared.adiPb = nil
-                        print("Cleared adi.pb from keychain")
-                    }
-                    self.tableView.deselectRow(at: indexPath, animated: true)
-                })
-                alertController.addAction(.cancel)
-                //Fix crash on iPad
-                alertController.popoverPresentationController?.sourceView = self.tableView
-                alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
-                self.present(alertController, animated: true)
-                self.tableView.deselectRow(at: indexPath, animated: true)
+            case .anisetteServers:
+                self.prepare(for: UIStoryboardSegue(identifier: "anisetteServers", source: self, destination: UIHostingController(rootView: AnisetteServers(selected: "", errorCallback: {
+                    ToastView(text: "Reset adi.pb", detailText: "Buh").show(in: self)
+                }))), sender: nil)
+//                self.performSegue(withIdentifier: "anisetteServers", sender: nil)
             case .advancedSettings:
                 // Create the URL that deep links to your app's custom settings.
                 if let url = URL(string: UIApplication.openSettingsURLString) {

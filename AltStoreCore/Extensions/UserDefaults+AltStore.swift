@@ -26,6 +26,8 @@ public extension UserDefaults
     @NSManaged var textInputSideJITServerurl: String?
     @NSManaged var textInputAnisetteURL: String?
     @NSManaged var customAnisetteURL: String?
+    @NSManaged var menuAnisetteURL: String
+    @NSManaged var menuAnisetteList: String
     @NSManaged var preferredServerID: String?
     
     @NSManaged var isBackgroundRefreshEnabled: Bool
@@ -81,8 +83,9 @@ public extension UserDefaults
             #keyPath(UserDefaults.isLegacyDeactivationSupported): isLegacyDeactivationSupported,
             #keyPath(UserDefaults.activeAppLimitIncludesExtensions): activeAppLimitIncludesExtensions,
             #keyPath(UserDefaults.localServerSupportsRefreshing): localServerSupportsRefreshing,
-            #keyPath(UserDefaults.requiresAppGroupMigration): true
-        ]
+            #keyPath(UserDefaults.requiresAppGroupMigration): true,
+            #keyPath(UserDefaults.menuAnisetteURL): "https://ani.sidestore.io"
+        ] as [String : Any]
         
         UserDefaults.standard.register(defaults: defaults)
         UserDefaults.shared.register(defaults: defaults)

@@ -10,6 +10,11 @@ import Foundation
 
 public struct AnisetteManager {
     
+    var menuURL: String {
+        var url: String
+        url = UserDefaults.standard.menuAnisetteURL
+        return url
+    }
     /// User defined URL from Settings/UserDefaults
     static var userURL: String? {
         var urlString: String?

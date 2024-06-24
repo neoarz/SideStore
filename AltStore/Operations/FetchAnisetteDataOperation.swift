@@ -45,7 +45,7 @@ final class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, WebSoc
             return
         }
         
-        self.url = AnisetteManager.currentURL
+        self.url = URL(string: UserDefaults.standard.menuAnisetteURL)
         print("Anisette URL: \(self.url!.absoluteString)")
         
         if let identifier = Keychain.shared.identifier,
@@ -408,6 +408,7 @@ final class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, WebSoc
     func fetchAnisetteV3(_ identifier: String, _ adiPb: String) {
         fetchClientInfo {
             print("Fetching anisette V3")
+            let url = UserDefaults.standard.menuAnisetteURL
             var request = URLRequest(url: self.url!.appendingPathComponent("v3").appendingPathComponent("get_headers"))
             request.httpMethod = "POST"
             request.httpBody = try! JSONSerialization.data(withJSONObject: [

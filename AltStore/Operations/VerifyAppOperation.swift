@@ -119,8 +119,10 @@ final class VerifyAppOperation: ResultOperation<Void>
             
             guard let app = self.context.app else { throw OperationError.invalidParameters }
             
-            guard app.bundleIdentifier == self.context.bundleIdentifier else {
-                throw VerificationError.mismatchedBundleIdentifiers(sourceBundleID: self.context.bundleIdentifier, app: app)
+            if !["ny.litritt.ignited", "com.litritt.ignited"].contains(where: { $0 == app.bundleIdentifier }) {
+                guard app.bundleIdentifier == self.context.bundleIdentifier else {
+                    throw VerificationError.mismatchedBundleIdentifiers(sourceBundleID: self.context.bundleIdentifier, app: app)
+                }
             }
             
             guard ProcessInfo.processInfo.isOperatingSystemAtLeast(app.minimumiOSVersion) else {
