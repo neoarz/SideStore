@@ -21,10 +21,10 @@ extension OperationError
         case unknownResult
         case cancelled
         case timedOut
-        case unabletoconnectSideJIT
-        case unabletoconSideJITDevice
-        case wrongIP
-        case SideJITIssue(error: String)
+        case unableToConnectSideJIT
+        case unableToRespondSideJITDevice
+        case wrongSideJITIP
+        case SideJITIssue // (error: String)
         case refreshsidejit
         case notAuthenticated
         case appNotFound
@@ -49,6 +49,9 @@ extension OperationError
     static let unknownResult: OperationError = .init(code: .unknownResult)
     static let cancelled: OperationError = .init(code: .cancelled)
     static let timedOut: OperationError = .init(code: .timedOut)
+    static let unableToConnectSideJIT: OperationError = .init(code: .unableToConnectSideJIT)
+    static let unableToRespondSideJITDevice: OperationError = .init(code: .unableToRespondSideJITDevice)
+    static let wrongSideJITIP: OperationError = .init(code: .wrongSideJITIP)
     static let notAuthenticated: OperationError = .init(code: .notAuthenticated)
     static let unknownUDID: OperationError = .init(code: .unknownUDID)
     static let invalidApp: OperationError = .init(code: .invalidApp)
@@ -75,7 +78,13 @@ extension OperationError
     static func openAppFailed(name: String?) -> OperationError {
         OperationError(code: .openAppFailed, appName: name)
     }
-
+    
+    static func SideJITIssue(error: String?) -> OperationError {
+        var o = OperationError(code: .SideJITIssue)
+        o.errorFailure = error
+        return o
+    }
+    
     static func maximumAppIDLimitReached(appName: String, requiredAppIDs: Int, availableAppIDs: Int, expirationDate: Date) -> OperationError {
         OperationError(code: .maximumAppIDLimitReached, appName: appName, requiredAppIDs: requiredAppIDs, availableAppIDs: availableAppIDs, expirationDate: expirationDate)
     }
@@ -158,14 +167,15 @@ struct OperationError: ALTLocalizedError {
             return String(format: NSLocalizedString("SideStore was denied permission to launch %@.", comment: ""), appName)
         case .noWiFi: return NSLocalizedString("You do not appear to be connected to WiFi and/or the WireGuard VPN!\nSideStore will never be able to install or refresh applications without WiFi and the WireGuard VPN.", comment: "")
         case .tooNewError: return NSLocalizedString("iOS 17 has changed how JIT is enabled therefore SideStore cannot enable it at this time, sorry for any inconvenience.\nWe will let everyone know once we have a solution!", comment: "")
-        case .unabletoconnectSideJIT: return NSLocalizedString("Unable to connect to SideJITServer Please check that you are on the Same Wi-Fi and your Firewall has been set correctly", comment: "")
-        case .unabletoconSideJITDevice: return NSLocalizedString("SideJITServer is unable to connect to your iDevice Please make sure you have paired your Device by doing 'SideJITServer -y' or try Refreshing SideJITServer from Settings", comment: "")
-        case .wrongIP: return NSLocalizedString("Incorrect SideJITServer IP Please make sure that you are on the Samw Wifi as SideJITServer", comment: "")
+        case .unableToConnectSideJIT: return NSLocalizedString("Unable to connect to SideJITServer Please check that you are on the Same Wi-Fi and your Firewall has been set correctly", comment: "")
+        case .unableToRespondSideJITDevice: return NSLocalizedString("SideJITServer is unable to connect to your iDevice Please make sure you have paired your Device by doing 'SideJITServer -y' or try Refreshing SideJITServer from Settings", comment: "")
+        case .wrongSideJITIP: return NSLocalizedString("Incorrect SideJITServer IP Please make sure that you are on the Samw Wifi as SideJITServer", comment: "")
         case .refreshsidejit: return NSLocalizedString("Unable to find App Please try Refreshing SideJITServer from Settings", comment: "")
         case .anisetteV1Error: return NSLocalizedString("An error occurred when getting anisette data from a V1 server: %@. Try using another anisette server.", comment: "")
         case .provisioningError: return NSLocalizedString("An error occurred when provisioning: %@ %@. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
         case .anisetteV3Error: return NSLocalizedString("An error occurred when getting anisette data from a V3 server: %@. Please try again. If the issue persists, report it on GitHub Issues!", comment: "")
         case .cacheClearError: return NSLocalizedString("An error occurred while clearing cache: %@", comment: "")
+        case .SideJITIssue: return NSLocalizedString("An error occurred while using SideJIT: %@", comment: "")
         }
     }
     

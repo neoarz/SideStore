@@ -61,12 +61,10 @@ final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
                         switch result {
                         case .failure(let error):
                             switch error {
-                            case .invalidURL:
-                                self.finish(.failure(OperationError.unabletoconnectSideJIT))
-                            case .errorConnecting:
-                                self.finish(.failure(OperationError.unabletoconnectSideJIT))
+                            case .invalidURL, .errorConnecting:
+                                self.finish(.failure(OperationError.unableToConnectSideJIT))
                             case .deviceNotFound:
-                                self.finish(.failure(OperationError.unabletoconSideJITDevice))
+                                self.finish(.failure(OperationError.unableToRespondSideJITDevice))
                             case .other(let message):
                                 if let startRange = message.range(of: "<p>"),
                                    let endRange = message.range(of: "</p>", range: startRange.upperBound..<message.endIndex) {
