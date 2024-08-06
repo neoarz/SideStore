@@ -177,8 +177,3 @@ struct AnisetteServers: View {
     }
 }
 
-
-@available(iOS 15.0, *)
-#Preview {
-    AnisetteServers(selected: "", errorCallback: {})
-}
