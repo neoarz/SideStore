@@ -1402,7 +1402,57 @@ private extension AppManager
         progress.addChild(installOperation.progress, withPendingUnitCount: 30)
         installOperation.addDependency(sendAppOperation)
         
-        let operations = [downloadOperation, verifyOperation, removeAppExtensionsOperation, refreshAnisetteDataOperation, fetchProvisioningProfilesOperation, deactivateAppsOperation, patchAppOperation, resignAppOperation, sendAppOperation, installOperation]
+        let notificationRegistrationOperation = RSTAsyncBlockOperation { (operation) in
+            do
+            {
+                
+                if let error = context.error
+                {
+                    throw error
+                }
+                guard let app = context.installedApp else { operation.finish(); return }
+                let content = UNMutableNotificationContent()
+                content.title = "App Expiring Soon"
+                let formatter = DateComponentsFormatter()
+                formatter.unitsStyle = .full
+                formatter.includesApproximationPhrase = false
+                formatter.includesTimeRemainingPhrase = false
+                
+                formatter.allowedUnits = [.day, .hour, .minute]
+                
+                formatter.maximumUnitCount = 1
+                
+                let scheduledDate = DateInterval(start: Date(), duration: 60 * 60 * 24 * 6)
+
+                                
+                guard let timeLeft = formatter.string(from: scheduledDate.end, to: app.expirationDate) else { operation.finish(); return }
+                
+                content.body = "App \(app.name) is expiring in \(timeLeft). Open SideStore to refresh now"
+                
+                var dateComponents = DateComponents()
+                dateComponents.calendar = Calendar.current
+                
+                let trigger = UNCalendarNotificationTrigger(
+                    dateMatching: dateComponents, repeats: true)
+                
+                let request = UNNotificationRequest(identifier: app.bundleIdentifier, content: content, trigger: trigger)
+                
+                let notificationCenter = UNUserNotificationCenter.current()
+                
+                notificationCenter.add(request) {_ in 
+                    operation.finish()
+                }
+            }
+            catch
+            {
+                operation.finish()
+            }
+        }
+        
+        notificationRegistrationOperation.addDependency(installOperation)
+    
+        
+        let operations = [downloadOperation, verifyOperation, removeAppExtensionsOperation, refreshAnisetteDataOperation, fetchProvisioningProfilesOperation, deactivateAppsOperation, patchAppOperation, resignAppOperation, sendAppOperation, installOperation, notificationRegistrationOperation]
         group.add(operations)
         self.run(operations, context: group.context)
         
