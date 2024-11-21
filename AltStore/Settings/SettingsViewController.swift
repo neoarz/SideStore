@@ -587,8 +587,8 @@ extension SettingsViewController
             let row = CreditsRow.allCases[indexPath.row]
             switch row
             {
-            case .developer: self.openTwitter(username: "sidestore_io")
-            case .operations: self.openTwitter(username: "sidestore_io")
+            case .developer: self.openTwitter(username: "sidestoreio")
+            case .operations: self.openTwitter(username: "sidestoreio")
             case .designer: self.openTwitter(username: "lit_ritt")
             case .softwareLicenses: break
             }
@@ -619,24 +619,24 @@ extension SettingsViewController
                 })
                 
                 // Option 3: Mail
-//                alertController.addAction(UIAlertAction(title: "Send Email", style: .default) { _ in
-//                    if MFMailComposeViewController.canSendMail() {
-//                        let mailViewController = MFMailComposeViewController()
-//                        mailViewController.mailComposeDelegate = self
-//                        mailViewController.setToRecipients(["support@sidestore.io"])
-//
-//                        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-//                            mailViewController.setSubject("SideStore Beta \(version) Feedback")
-//                        } else {
-//                            mailViewController.setSubject("SideStore Beta Feedback")
-//                        }
-//
-//                       self.present(mailViewController, animated: true, completion: nil)
-//                  } else {
-//                      let toastView = ToastView(text: NSLocalizedString("Cannot Send Mail", comment: ""), detailText: nil)
-//                      toastView.show(in: self)
-//                }
-//            })
+                alertController.addAction(UIAlertAction(title: "Send Email", style: .default) { _ in
+                    if MFMailComposeViewController.canSendMail() {
+                        let mailViewController = MFMailComposeViewController()
+                        mailViewController.mailComposeDelegate = self
+                        mailViewController.setToRecipients(["support@sidestore.io"])
+
+                        if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                            mailViewController.setSubject("SideStore Beta \(version) Feedback")
+                        } else {
+                            mailViewController.setSubject("SideStore Beta Feedback")
+                        }
+
+                       self.present(mailViewController, animated: true, completion: nil)
+                  } else {
+                      let toastView = ToastView(text: NSLocalizedString("Cannot Send Mail", comment: ""), detailText: nil)
+                      toastView.show(in: self)
+                }
+            })
                 
                 // Cancel action
                 alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
