@@ -112,6 +112,8 @@ private extension AuthenticationViewController
 
                     let toastView = ToastView(error: error)
                     toastView.show(in: self)
+                    toastView.textLabel.textColor = .altPrimary
+                    toastView.detailTextLabel.textColor = .altPrimary
                     self.toastView = toastView
                     
                     self.signInButton.isIndicatingActivity = false
