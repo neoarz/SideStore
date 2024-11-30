@@ -1015,120 +1015,129 @@ private extension AppManager
         return group
     }
     
-    func removeAppExtensions(from application: ALTApplication, existingApp: InstalledApp?, extensions: Set<ALTApplication>, _ presentingViewController: UIViewController?, completion: @escaping (Result<Void, Error>) -> Void)
-    {
+    func removeAppExtensions(
+        from application: ALTApplication,
+        existingApp: InstalledApp?,
+        extensions: Set<ALTApplication>,
+        _ presentingViewController: UIViewController?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
             
-        //App-Extensions: Ensure existing app's extensions and currently installing app's extensions must match
-        let existingAppEx: Set<InstalledExtension> = existingApp?.appExtensions ?? Set()
-        let currentAppEx: Set<ALTApplication> = application.appExtensions
-        
-        let currentAppExNames  = currentAppEx.map{ appEx in appEx.bundleIdentifier}
-        let existingAppExNames = existingAppEx.map{ appEx in appEx.bundleIdentifier}
-
-        let excessExtensions = currentAppEx.filter{
-            !(existingAppExNames.contains($0.bundleIdentifier))
-        }
-        
-        let isMatching = (currentAppEx.count == existingAppEx.count) && excessExtensions.isEmpty
-        let diagnosticsMsg = "AppManager.removeAppExtensions: App Extensions in existingApp and currentApp are matching: \(isMatching)\n"
-                           + "AppManager.removeAppExtensions: existingAppEx: \(existingAppExNames); currentAppEx: \(String(describing: currentAppExNames))\n"
-        print(diagnosticsMsg)
-     
-        // if background mode, then remove only the excess extensions
-        guard let presentingViewController: UIViewController = presentingViewController else {
-            // perform silent extensions cleanup for those that aren't already present in existing app
-            print("\n    Performing background mode Extensions removal    \n")
-            print("AppManager.removeAppExtensions: Excess Extensions: \(excessExtensions)")
-            
-            do {
-                for appExtension in excessExtensions {
-                    print("Deleting extension \(appExtension.bundleIdentifier)")
-                    try FileManager.default.removeItem(at: appExtension.fileURL)
+        // App-Extensions: Ensure existing app's extensions and currently installing app's extensions must match
+        if let existingApp {
+            _ = RSTAsyncBlockOperation { _ in
+                let existingAppEx: Set<InstalledExtension> = existingApp.appExtensions
+                let currentAppEx: Set<ALTApplication> = application.appExtensions
+                
+                let currentAppExNames  = currentAppEx.map{ appEx in appEx.bundleIdentifier}
+                let existingAppExNames = existingAppEx.map{ appEx in appEx.bundleIdentifier}
+                
+                let excessExtensions = currentAppEx.filter{
+                    !(existingAppExNames.contains($0.bundleIdentifier))
                 }
-                return completion(.success(()))
-            } catch {
-                return completion(.failure(error))
+                
+                
+                let isMatching = (currentAppEx.count == existingAppEx.count) && excessExtensions.isEmpty
+                let diagnosticsMsg = "AppManager.removeAppExtensions: App Extensions in existingApp and currentApp are matching: \(isMatching)\n"
+                + "AppManager.removeAppExtensions: existingAppEx: \(existingAppExNames); currentAppEx: \(String(describing: currentAppExNames))\n"
+                print(diagnosticsMsg)
+                
+                
+                // if background mode, then remove only the excess extensions
+                guard let presentingViewController: UIViewController = presentingViewController else {
+                    // perform silent extensions cleanup for those that aren't already present in existing app
+                    print("\n    Performing background mode Extensions removal    \n")
+                    print("AppManager.removeAppExtensions: Excess Extensions: \(excessExtensions)")
+                    
+                    do {
+                        for appExtension in excessExtensions {
+                            print("Deleting extension \(appExtension.bundleIdentifier)")
+                            try FileManager.default.removeItem(at: appExtension.fileURL)
+                        }
+                        return completion(.success(()))
+                    } catch {
+                        return completion(.failure(error))
+                    }
+                }
             }
         }
      
         guard !application.appExtensions.isEmpty else { return completion(.success(())) }
         
-        let firstSentence: String
-        
-        if UserDefaults.standard.activeAppLimitIncludesExtensions
-        {
-            firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to 3 active apps and app extensions.", comment: "")
-        }
-        else
-        {
-            firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to creating 10 App IDs per week.", comment: "")
-        }
-        
-        let message = firstSentence + " " + NSLocalizedString("Would you like to remove this app's extensions so they don't count towards your limit? There are \(extensions.count) Extensions", comment: "")
-        
-        let alertController = UIAlertController(title: NSLocalizedString("App Contains Extensions", comment: ""), message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style, handler: { (action) in
-            completion(.failure(OperationError.cancelled))
-        }))
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Keep App Extensions", comment: ""), style: .default) { (action) in
-            completion(.success(()))
-        })
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Remove App Extensions", comment: ""), style: .destructive) { (action) in
-            do
+        DispatchQueue.main.async {
+            let firstSentence: String
+            
+            if UserDefaults.standard.activeAppLimitIncludesExtensions
             {
-                for appExtension in application.appExtensions
-                {
-                    print("Deleting extension \(appExtension.bundleIdentifier)")
-                    try FileManager.default.removeItem(at: appExtension.fileURL)
-                }
-                
+                firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to 3 active apps and app extensions.", comment: "")
+            }
+            else
+            {
+                firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to creating 10 App IDs per week.", comment: "")
+            }
+            
+            let message = firstSentence + " " + NSLocalizedString("Would you like to remove this app's extensions so they don't count towards your limit? There are \(extensions.count) Extensions", comment: "")
+            
+            let alertController = UIAlertController(title: NSLocalizedString("App Contains Extensions", comment: ""), message: message, preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style, handler: { (action) in
+                completion(.failure(OperationError.cancelled))
+            }))
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Keep App Extensions", comment: ""), style: .default) { (action) in
                 completion(.success(()))
-            }
-            catch
-            {
-                completion(.failure(error))
-            }
-        })
-        
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Choose App Extensions", comment: ""), style: .default) { (action) in
-            let popoverContentController = AppExtensionViewHostingController(extensions: extensions) { (selection) in
+            })
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Remove App Extensions", comment: ""), style: .destructive) { (action) in
                 do
                 {
-                    for appExtension in selection
+                    for appExtension in application.appExtensions
                     {
                         print("Deleting extension \(appExtension.bundleIdentifier)")
-                        
                         try FileManager.default.removeItem(at: appExtension.fileURL)
                     }
+                    
                     completion(.success(()))
                 }
                 catch
                 {
                     completion(.failure(error))
                 }
-                return nil
-            }
+            })
             
-            let suiview = popoverContentController.view!
-            suiview.translatesAutoresizingMaskIntoConstraints = false
-            
-            popoverContentController.modalPresentationStyle = .popover
-            
-            if let popoverPresentationController = popoverContentController.popoverPresentationController {
-                popoverPresentationController.sourceView = presentingViewController.view
-                popoverPresentationController.sourceRect = CGRect(x: 50, y: 50, width: 4, height: 4)
-                popoverPresentationController.delegate = popoverContentController
+            if let presentingViewController {
+                alertController.addAction(UIAlertAction(title: NSLocalizedString("Choose App Extensions", comment: ""), style: .default) { (action) in
+                    let popoverContentController = AppExtensionViewHostingController(extensions: extensions) { (selection) in
+                        do
+                        {
+                            for appExtension in selection
+                            {
+                                print("Deleting extension \(appExtension.bundleIdentifier)")
+                                
+                                try FileManager.default.removeItem(at: appExtension.fileURL)
+                            }
+                            completion(.success(()))
+                        }
+                        catch
+                        {
+                            completion(.failure(error))
+                        }
+                        return nil
+                    }
+                    
+                    let suiview = popoverContentController.view!
+                    suiview.translatesAutoresizingMaskIntoConstraints = false
+                    
+                    popoverContentController.modalPresentationStyle = .popover
+                    
+                    if let popoverPresentationController = popoverContentController.popoverPresentationController {
+                        popoverPresentationController.sourceView = presentingViewController.view
+                        popoverPresentationController.sourceRect = CGRect(x: 50, y: 50, width: 4, height: 4)
+                        popoverPresentationController.delegate = popoverContentController
+                        
+                        presentingViewController.present(popoverContentController, animated: true)
+                    }
+                })
                 
-                DispatchQueue.main.async {
-                    presentingViewController.present(popoverContentController, animated: true)
-                }
+                presentingViewController.present(alertController, animated: true)
             }
-            
-
-        })
-        
-        DispatchQueue.main.async {
-            presentingViewController.present(alertController, animated: true)
         }
     }
     
