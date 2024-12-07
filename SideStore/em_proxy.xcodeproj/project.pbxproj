@@ -223,7 +223,7 @@
 				INSTALL_MODE_FLAG = "";
 				INSTALL_OWNER = "";
 				LIB_FILE_NAME = "";
-				"LIB_FILE_NAME[sdk=iphoneos*]" = libem_proxy;
+				"LIB_FILE_NAME[sdk=iphoneos*]" = "libem_proxy-ios";
 				"LIB_FILE_NAME[sdk=iphonesimulator*]" = "libem_proxy-sim";
 				PRODUCT_NAME = em_proxy_static;
 				SKIP_INSTALL = YES;
@@ -299,7 +299,7 @@
 				INSTALL_MODE_FLAG = "";
 				INSTALL_OWNER = "";
 				LIB_FILE_NAME = "";
-				"LIB_FILE_NAME[sdk=iphoneos*]" = libem_proxy;
+				"LIB_FILE_NAME[sdk=iphoneos*]" = "libem_proxy-ios";
 				"LIB_FILE_NAME[sdk=iphonesimulator*]" = "libem_proxy-sim";
 				PRODUCT_NAME = em_proxy_static;
 				SKIP_INSTALL = YES;
