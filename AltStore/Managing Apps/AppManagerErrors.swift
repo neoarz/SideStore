@@ -22,13 +22,27 @@ extension AppManager
         
         var managedObjectContext: NSManagedObjectContext?
         
-        var errorDescription: String? {
-            if let error = self.primaryError
-            {
-                return error.localizedDescription
+        var localizedTitle: String? {
+            var localizedTitle: String?
+            self.managedObjectContext?.performAndWait {
+                if self.sources?.count == 1 {
+                    localizedTitle = NSLocalizedString("Failed to refresh Store", comment: "")
+                } else if self.errors.count == 1 {
+                    guard let source = self.errors.keys.first else { return }
+                    localizedTitle = String(format: NSLocalizedString("Failed to refresh Source '%@'", comment: ""), source.name)
+                } else {
+                    localizedTitle = String(format: NSLocalizedString("Failed to refresh %@ Sources", comment: ""), NSNumber(value: self.errors.count))
+                }
             }
-            else
-            {
+            return localizedTitle
+        }
+
+        var errorDescription: String? {
+            if let error = self.primaryError {
+                return error.localizedDescription
+            } else if let error = self.errors.values.first, self.errors.count == 1 {
+                return error.localizedDescription
+            } else {
                 var localizedDescription: String?
                 
                 self.managedObjectContext?.performAndWait {
@@ -67,8 +81,14 @@ extension AppManager
         }
         
         var errorUserInfo: [String : Any] {
-            guard let error = self.errors.values.first, self.errors.count == 1 else { return [:] }
-            return [NSUnderlyingErrorKey: error]
+            let errors = Array(self.errors.values)
+            var userInfo = [String: Any]()
+            userInfo[ALTLocalizedTitleErrorKey] = self.localizedTitle
+            userInfo[NSUnderlyingErrorKey] = self.primaryError
+            if #available(iOS 14.5, *), !errors.isEmpty {
+                userInfo[NSMultipleUnderlyingErrorsKey] = errors
+            }
+            return userInfo
         }
         
         init(_ error: Error)

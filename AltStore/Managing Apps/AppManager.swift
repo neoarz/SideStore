@@ -8,12 +8,14 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 import UserNotifications
 import MobileCoreServices
 import Intents
 import Combine
 import WidgetKit
 
+import minimuxer
 import AltStoreCore
 import AltSign
 import Roxas
@@ -37,17 +39,12 @@ final class AppManagerPublisher: ObservableObject
     fileprivate(set) var refreshProgress = [String: Progress]()
 }
 
-private func ==(lhs: OperatingSystemVersion, rhs: OperatingSystemVersion) -> Bool
-{
-    return (lhs.majorVersion == rhs.majorVersion && lhs.minorVersion == rhs.minorVersion && lhs.patchVersion == rhs.patchVersion)
-}
-
 final class AppManager
 {
     static let shared = AppManager()
     
     private(set) var updatePatronsResult: Result<Void, Error>?
-    
+        
     private let operationQueue = OperationQueue()
     private let serialOperationQueue = OperationQueue()
 
@@ -243,7 +240,7 @@ extension AppManager
     
     func deactivateApps(for app: ALTApplication, presentingViewController: UIViewController, completion: @escaping (Result<Void, Error>) -> Void)
     {
-        guard let activeAppsLimit = UserDefaults.standard.activeAppsLimit else { return completion(.success(())) }
+        guard !UserDefaults.standard.isAppLimitDisabled, let activeAppsLimit = UserDefaults.standard.activeAppsLimit else { return completion(.success(())) }
         
         DispatchQueue.main.async {
             let activeApps = InstalledApp.fetchActiveApps(in: DatabaseManager.shared.viewContext)
@@ -307,6 +304,45 @@ extension AppManager
             presentingViewController.present(alertController, animated: true, completion: nil)
         }
     }
+    
+    func clearAppCache(completion: @escaping (Result<Void, Error>) -> Void)
+    {
+        let clearAppCacheOperation = ClearAppCacheOperation()
+        clearAppCacheOperation.resultHandler = { result in
+            completion(result)
+        }
+        
+        self.run([clearAppCacheOperation], context: nil)
+    }
+
+    func log(_ error: Error, operation: LoggedError.Operation, app: AppProtocol)
+    {
+        switch error {
+        case ~OperationError.Code.cancelled: return // Don't log cancelled events
+        default: break
+        }
+        // Sanitize NSError on same thread before performing background task.
+        let sanitizedError = (error as NSError).sanitizedForSerialization()
+
+        DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
+            var app = app
+            if let managedApp = app as? NSManagedObject, let tempApp = context.object(with: managedApp.objectID) as? AppProtocol
+            {
+                app = tempApp
+            }
+
+            do
+            {
+                _ = LoggedError(error: sanitizedError, app: app, operation: operation, context: context)
+                try context.save()
+            }
+            catch let saveError
+            {
+                print("[ALTLog] Failed to log error \(sanitizedError.domain) code \(sanitizedError.code) for \(app.bundleIdentifier):", saveError)
+            }
+        }
+    }
+
 }
 
 extension AppManager
@@ -359,7 +395,7 @@ extension AppManager
                     case .success(let source): fetchedSources.insert(source)
                     case .failure(let error):
                         let source = managedObjectContext.object(with: source.objectID) as! Source
-                        source.error = (error as NSError).sanitizedForCoreData()
+                        source.error = (error as NSError).sanitizedForSerialization()
                         errors[source] = error
                     }
                     
@@ -447,7 +483,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw context.error ?? OperationError.unknown }
+                guard let result = results.values.first else { throw context.error ?? OperationError.unknown() }
                 completionHandler(result)
             }
             catch
@@ -466,7 +502,7 @@ extension AppManager
     func update(_ app: InstalledApp, presentingViewController: UIViewController?, context: AuthenticatedOperationContext = AuthenticatedOperationContext(), completionHandler: @escaping (Result<InstalledApp, Error>) -> Void) -> Progress
     {
         guard let storeApp = app.storeApp else {
-            completionHandler(.failure(OperationError.appNotFound))
+            completionHandler(.failure(OperationError.appNotFound(name: app.name)))
             return Progress.discreteProgress(totalUnitCount: 1)
         }
         
@@ -474,7 +510,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
+                guard let result = results.values.first else { throw OperationError.unknown() }
                 completionHandler(result)
             }
             catch
@@ -510,8 +546,8 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
-                
+                guard let result = results.values.first else { throw OperationError.unknown() }
+
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
                 
@@ -549,7 +585,7 @@ extension AppManager
             group.completionHandler = { (results) in
                 do
                 {
-                    guard let result = results.values.first else { throw OperationError.unknown }
+                    guard let result = results.values.first else { throw OperationError.unknown() }
 
                     let installedApp = try result.get()
                     assert(installedApp.managedObjectContext != nil)
@@ -575,8 +611,8 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
-                
+                guard let result = results.values.first else { throw OperationError.unknown() }
+
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
                 
@@ -600,7 +636,7 @@ extension AppManager
         group.completionHandler = { (results) in
             do
             {
-                guard let result = results.values.first else { throw OperationError.unknown }
+                guard let result = results.values.first else { throw OperationError.unknown() }
                 
                 let installedApp = try result.get()
                 assert(installedApp.managedObjectContext != nil)
@@ -670,13 +706,20 @@ extension AppManager
             var installedApp: InstalledApp?
         }
         
+        let appName = installedApp.name
         let context = Context()
         context.installedApp = installedApp
         
         
         let enableJITOperation = EnableJITOperation(context: context)
         enableJITOperation.resultHandler = { (result) in
-            completionHandler(result)
+            switch result {
+            case .success: completionHandler(.success(()))
+            case .failure(let nsError as NSError):
+                let localizedTitle = String(format: NSLocalizedString("Failed to enable JIT for %@", comment: ""), appName)
+                let error = nsError.withLocalizedTitle(localizedTitle)
+                self.log(error, operation: .enableJIT, app: installedApp)
+            }
         }
         
         self.run([enableJITOperation], context: context, requiresSerialQueue: true)
@@ -754,6 +797,12 @@ extension AppManager
         let progress = self.refreshProgress[app.bundleIdentifier]
         return progress
     }
+    
+    func isActivelyManagingApp(withBundleID bundleID: String) -> Bool
+    {
+        let isActivelyManaging = self.installationProgress.keys.contains(bundleID) || self.refreshProgress.keys.contains(bundleID)
+        return isActivelyManaging
+    }
 }
 
 extension AppManager
@@ -806,12 +855,18 @@ private extension AppManager
             
             return bundleIdentifier
         }
-    }
-    
-    func isActivelyManagingApp(withBundleID bundleID: String) -> Bool
-    {
-        let isActivelyManaging = self.installationProgress.keys.contains(bundleID) || self.refreshProgress.keys.contains(bundleID)
-        return isActivelyManaging
+
+        var loggedErrorOperation: LoggedError.Operation {
+            switch self {
+            case .install: return .install
+            case .update: return .update
+            case .refresh: return .refresh
+            case .activate: return .activate
+            case .deactivate: return .deactivate
+            case .backup: return .backup
+            case .restore: return .restore
+            }
+        }
     }
     
     @discardableResult
@@ -948,10 +1003,142 @@ private extension AppManager
         }
         else
         {
+            DispatchQueue.main.schedule {
+                UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
+            }
             performAppOperations()
+            DispatchQueue.main.schedule {
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
         }
         
         return group
+    }
+    
+    func removeAppExtensions(
+        from application: ALTApplication,
+        existingApp: InstalledApp?,
+        extensions: Set<ALTApplication>,
+        _ presentingViewController: UIViewController?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+            
+        // App-Extensions: Ensure existing app's extensions and currently installing app's extensions must match
+        if let existingApp {
+            _ = RSTAsyncBlockOperation { _ in
+                let existingAppEx: Set<InstalledExtension> = existingApp.appExtensions
+                let currentAppEx: Set<ALTApplication> = application.appExtensions
+                
+                let currentAppExNames  = currentAppEx.map{ appEx in appEx.bundleIdentifier}
+                let existingAppExNames = existingAppEx.map{ appEx in appEx.bundleIdentifier}
+                
+                let excessExtensions = currentAppEx.filter{
+                    !(existingAppExNames.contains($0.bundleIdentifier))
+                }
+                
+                
+                let isMatching = (currentAppEx.count == existingAppEx.count) && excessExtensions.isEmpty
+                let diagnosticsMsg = "AppManager.removeAppExtensions: App Extensions in existingApp and currentApp are matching: \(isMatching)\n"
+                + "AppManager.removeAppExtensions: existingAppEx: \(existingAppExNames); currentAppEx: \(String(describing: currentAppExNames))\n"
+                print(diagnosticsMsg)
+                
+                
+                // if background mode, then remove only the excess extensions
+                guard let presentingViewController: UIViewController = presentingViewController else {
+                    // perform silent extensions cleanup for those that aren't already present in existing app
+                    print("\n    Performing background mode Extensions removal    \n")
+                    print("AppManager.removeAppExtensions: Excess Extensions: \(excessExtensions)")
+                    
+                    do {
+                        for appExtension in excessExtensions {
+                            print("Deleting extension \(appExtension.bundleIdentifier)")
+                            try FileManager.default.removeItem(at: appExtension.fileURL)
+                        }
+                        return completion(.success(()))
+                    } catch {
+                        return completion(.failure(error))
+                    }
+                }
+            }
+        }
+     
+        guard !application.appExtensions.isEmpty else { return completion(.success(())) }
+        
+        DispatchQueue.main.async {
+            let firstSentence: String
+            
+            if UserDefaults.standard.activeAppLimitIncludesExtensions
+            {
+                firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to 3 active apps and app extensions.", comment: "")
+            }
+            else
+            {
+                firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to creating 10 App IDs per week.", comment: "")
+            }
+            
+            let message = firstSentence + " " + NSLocalizedString("Would you like to remove this app's extensions so they don't count towards your limit? There are \(extensions.count) Extensions", comment: "")
+            
+            let alertController = UIAlertController(title: NSLocalizedString("App Contains Extensions", comment: ""), message: message, preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style, handler: { (action) in
+                completion(.failure(OperationError.cancelled))
+            }))
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Keep App Extensions", comment: ""), style: .default) { (action) in
+                completion(.success(()))
+            })
+            alertController.addAction(UIAlertAction(title: NSLocalizedString("Remove App Extensions", comment: ""), style: .destructive) { (action) in
+                do
+                {
+                    for appExtension in application.appExtensions
+                    {
+                        print("Deleting extension \(appExtension.bundleIdentifier)")
+                        try FileManager.default.removeItem(at: appExtension.fileURL)
+                    }
+                    
+                    completion(.success(()))
+                }
+                catch
+                {
+                    completion(.failure(error))
+                }
+            })
+            
+            if let presentingViewController {
+                alertController.addAction(UIAlertAction(title: NSLocalizedString("Choose App Extensions", comment: ""), style: .default) { (action) in
+                    let popoverContentController = AppExtensionViewHostingController(extensions: extensions) { (selection) in
+                        do
+                        {
+                            for appExtension in selection
+                            {
+                                print("Deleting extension \(appExtension.bundleIdentifier)")
+                                
+                                try FileManager.default.removeItem(at: appExtension.fileURL)
+                            }
+                            completion(.success(()))
+                        }
+                        catch
+                        {
+                            completion(.failure(error))
+                        }
+                        return nil
+                    }
+                    
+                    let suiview = popoverContentController.view!
+                    suiview.translatesAutoresizingMaskIntoConstraints = false
+                    
+                    popoverContentController.modalPresentationStyle = .popover
+                    
+                    if let popoverPresentationController = popoverContentController.popoverPresentationController {
+                        popoverPresentationController.sourceView = presentingViewController.view
+                        popoverPresentationController.sourceRect = CGRect(x: 50, y: 50, width: 4, height: 4)
+                        popoverPresentationController.delegate = popoverContentController
+                        
+                        presentingViewController.present(popoverContentController, animated: true)
+                    }
+                })
+                
+                presentingViewController.present(alertController, animated: true)
+            }
+        }
     }
     
     private func _install(_ app: AppProtocol, operation appOperation: AppOperation, group: RefreshGroup, context: InstallAppOperationContext? = nil, additionalEntitlements: [ALTEntitlement: Any]? = nil, cacheApp: Bool = true, completionHandler: @escaping (Result<InstalledApp, Error>) -> Void) -> Progress
@@ -1026,7 +1213,81 @@ private extension AppManager
         }
         verifyOperation.addDependency(downloadOperation)
         
+        /* Remove App Extensions */
         
+        let removeAppExtensionsOperation = RSTAsyncBlockOperation { [weak self] (operation) in
+            do
+            {
+                if let error = context.error
+                {
+                    throw error
+                }
+/*
+                guard case .install = appOperation else {
+                    operation.finish()
+                    return
+                }
+*/
+                guard let extensions = context.app?.appExtensions else {
+                    throw OperationError.invalidParameters("AppManager._install.removeAppExtensionsOperation: context.app?.appExtensions is nil")
+                }
+                
+                guard let currentApp = context.app else {
+                    throw OperationError.invalidParameters("AppManager._install.removeAppExtensionsOperation: context.app is nil")
+                }
+                
+                
+                self?.removeAppExtensions(from: currentApp,
+                                          existingApp: app as? InstalledApp,
+                                          extensions: extensions,
+                                          context.authenticatedContext.presentingViewController
+                ) { result in
+                    switch result {
+                    case .success(): break
+                    case .failure(let error): context.error = error
+                    }
+                    operation.finish()
+                }
+                
+            }
+            catch
+            {
+                context.error = error
+                operation.finish()
+            }
+        }
+        
+        removeAppExtensionsOperation.addDependency(verifyOperation)
+        
+        
+        /* Refresh Anisette Data */
+        let refreshAnisetteDataOperation = FetchAnisetteDataOperation(context: group.context)
+        refreshAnisetteDataOperation.resultHandler = { (result) in
+            switch result
+            {
+            case .failure(let error): context.error = error
+            case .success(let anisetteData): group.context.session?.anisetteData = anisetteData
+            }
+        }
+        refreshAnisetteDataOperation.addDependency(removeAppExtensionsOperation)
+
+
+        /* Fetch Provisioning Profiles */
+        let fetchProvisioningProfilesOperation = FetchProvisioningProfilesOperation(context: context)
+        fetchProvisioningProfilesOperation.additionalEntitlements = additionalEntitlements
+        fetchProvisioningProfilesOperation.resultHandler = { (result) in
+            switch result
+            {
+            case .failure(let error): context.error = error
+            case .success(let provisioningProfiles): 
+                context.provisioningProfiles = provisioningProfiles
+                print("PROVISIONING PROFILES \(context.provisioningProfiles)")
+            }
+        }
+        fetchProvisioningProfilesOperation.addDependency(refreshAnisetteDataOperation)
+        progress.addChild(fetchProvisioningProfilesOperation.progress, withPendingUnitCount: 5)
+
+
         /* Deactivate Apps (if necessary) */
         let deactivateAppsOperation = RSTAsyncBlockOperation { [weak self] (operation) in
             do
@@ -1042,8 +1303,21 @@ private extension AppManager
                 {
                     throw error
                 }
+                
+                guard let profiles = context.provisioningProfiles else {
+                    throw OperationError.invalidParameters("AppManager._install.deactivateAppsOperation: context.provisioningProfiles is nil")
+                }
+                if !profiles.contains(where: { $1.isFreeProvisioningProfile == true }) {
+                    operation.finish()
+                    return
+                }
                                 
-                guard let app = context.app, let presentingViewController = context.authenticatedContext.presentingViewController else { throw OperationError.invalidParameters }
+                guard
+                    let app = context.app,
+                    let presentingViewController = context.authenticatedContext.presentingViewController
+                else {
+                    throw OperationError.invalidParameters("AppManager._install.deactivateAppsOperation: self.context.app or context.authenticatedContext.presentingViewController is nil")
+                }
                 
                 self?.deactivateApps(for: app, presentingViewController: presentingViewController) { result in
                     switch result
@@ -1061,8 +1335,7 @@ private extension AppManager
                 operation.finish()
             }
         }
-        deactivateAppsOperation.addDependency(verifyOperation)
-        
+        deactivateAppsOperation.addDependency(fetchProvisioningProfilesOperation)
         
         /* Patch App */
         let patchAppOperation = RSTAsyncBlockOperation { operation in
@@ -1083,7 +1356,9 @@ private extension AppManager
                     throw error
                 }
                 
-                guard let app = context.app else { throw OperationError.invalidParameters }
+                guard let app = context.app else {
+                    throw OperationError.invalidParameters("AppManager._install.patchAppOperation: context.app is nil")
+                }
                 
                 guard let isUntetherRequired = app.bundle.infoDictionary?[Bundle.Info.untetherRequired] as? Bool,
                       let minimumiOSVersionString = app.bundle.infoDictionary?[Bundle.Info.untetherMinimumiOSVersion] as? String,
@@ -1136,32 +1411,6 @@ private extension AppManager
         patchAppOperation.addDependency(deactivateAppsOperation)
         
         
-        /* Refresh Anisette Data */
-        let refreshAnisetteDataOperation = FetchAnisetteDataOperation(context: group.context)
-        refreshAnisetteDataOperation.resultHandler = { (result) in
-            switch result
-            {
-            case .failure(let error): context.error = error
-            case .success(let anisetteData): group.context.session?.anisetteData = anisetteData
-            }
-        }
-        refreshAnisetteDataOperation.addDependency(patchAppOperation)
-        
-        
-        /* Fetch Provisioning Profiles */
-        let fetchProvisioningProfilesOperation = FetchProvisioningProfilesOperation(context: context)
-        fetchProvisioningProfilesOperation.additionalEntitlements = additionalEntitlements
-        fetchProvisioningProfilesOperation.resultHandler = { (result) in
-            switch result
-            {
-            case .failure(let error): context.error = error
-            case .success(let provisioningProfiles): context.provisioningProfiles = provisioningProfiles
-            }
-        }
-        fetchProvisioningProfilesOperation.addDependency(refreshAnisetteDataOperation)
-        progress.addChild(fetchProvisioningProfilesOperation.progress, withPendingUnitCount: 5)
-        
-        
         /* Resign */
         let resignAppOperation = ResignAppOperation(context: context)
         resignAppOperation.resultHandler = { (result) in
@@ -1171,7 +1420,7 @@ private extension AppManager
             case .success(let resignedApp): context.resignedApp = resignedApp
             }
         }
-        resignAppOperation.addDependency(fetchProvisioningProfilesOperation)
+        resignAppOperation.addDependency(patchAppOperation)
         progress.addChild(resignAppOperation.progress, withPendingUnitCount: 20)
         
         
@@ -1214,7 +1463,7 @@ private extension AppManager
         progress.addChild(installOperation.progress, withPendingUnitCount: 30)
         installOperation.addDependency(sendAppOperation)
         
-        let operations = [downloadOperation, verifyOperation, deactivateAppsOperation, patchAppOperation, refreshAnisetteDataOperation, fetchProvisioningProfilesOperation, resignAppOperation, sendAppOperation, installOperation]
+        let operations = [downloadOperation, verifyOperation, removeAppExtensionsOperation, refreshAnisetteDataOperation, fetchProvisioningProfilesOperation, deactivateAppsOperation, patchAppOperation, resignAppOperation, sendAppOperation, installOperation]
         group.add(operations)
         self.run(operations, context: group.context)
         
@@ -1228,6 +1477,24 @@ private extension AppManager
         let context = AppOperationContext(bundleIdentifier: app.bundleIdentifier, authenticatedContext: group.context)
         context.app = ALTApplication(fileURL: app.fileURL)
         
+        //App-Extensions: Ensure DB data and disk state must match
+        let dbAppEx: Set<InstalledExtension> = Set(app.appExtensions)
+        let diskAppEx: Set<ALTApplication> = Set(context.app!.appExtensions)
+        let diskAppExNames = diskAppEx.map { $0.bundleIdentifier }
+        let dbAppExNames = dbAppEx.map{ $0.bundleIdentifier }            
+        let isMatching = Set(dbAppExNames) == Set(diskAppExNames)
+
+        let validateAppExtensionsOperation = RSTAsyncBlockOperation { op in
+            
+            let errMessage = "AppManager.refresh: App Extensions in DB and Disk are matching: \(isMatching)\n"
+                           + "AppManager.refresh: dbAppEx: \(dbAppExNames); diskAppEx: \(String(describing: diskAppExNames))\n"
+            print(errMessage)
+            if(!isMatching){
+                completionHandler(.failure(OperationError.refreshAppFailed(message: errMessage)))
+            }
+            op.finish()
+        }
+        
         /* Fetch Provisioning Profiles */
         let fetchProvisioningProfilesOperation = FetchProvisioningProfilesOperation(context: context)
         fetchProvisioningProfilesOperation.resultHandler = { (result) in
@@ -1238,6 +1505,8 @@ private extension AppManager
             }
         }
         progress.addChild(fetchProvisioningProfilesOperation.progress, withPendingUnitCount: 60)
+        fetchProvisioningProfilesOperation.addDependency(validateAppExtensionsOperation)
+        
         
         /* Refresh */
         let refreshAppOperation = RefreshAppOperation(context: context)
@@ -1247,14 +1516,21 @@ private extension AppManager
             case .success(let installedApp):
                 completionHandler(.success(installedApp))
                 
-            case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound):
+            case .failure(MinimuxerError.ProfileInstall):
+                completionHandler(.failure(OperationError.noWiFi))
+                
+            case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound(name: app.name)):
                 // Fall back to installation if AltServer doesn't support newer provisioning profile requests,
                 // OR if the cached app could not be found and we may need to redownload it.
                 app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
-                    let installProgress = self._install(app, operation: operation, group: group) { (result) in
-                        completionHandler(result)
+                    if minimuxer.ready() {
+                        let installProgress = self._install(app, operation: operation, group: group) { (result) in
+                            completionHandler(result)
+                        }
+                        progress.addChild(installProgress, withPendingUnitCount: 40)
+                    } else {
+                        completionHandler(.failure(OperationError.noWiFi))
                     }
-                    progress.addChild(installProgress, withPendingUnitCount: 40)
                 }
                 
             case .failure(let error):
@@ -1264,7 +1540,7 @@ private extension AppManager
         progress.addChild(refreshAppOperation.progress, withPendingUnitCount: 40)
         refreshAppOperation.addDependency(fetchProvisioningProfilesOperation)
         
-        let operations = [fetchProvisioningProfilesOperation, refreshAppOperation]
+        let operations = [validateAppExtensionsOperation, fetchProvisioningProfilesOperation, refreshAppOperation]
         group.add(operations)
         self.run(operations, context: group.context)
 
@@ -1521,7 +1797,7 @@ private extension AppManager
         }
         
         guard let application = ALTApplication(fileURL: app.fileURL) else {
-            completionHandler(.failure(OperationError.appNotFound))
+            completionHandler(.failure(OperationError.appNotFound(name: app.name)))
             return progress
         }
         
@@ -1533,8 +1809,8 @@ private extension AppManager
                     let temporaryDirectoryURL = context.temporaryDirectory.appendingPathComponent("AltBackup-" + UUID().uuidString)
                     try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true, attributes: nil)
                     
-                    guard let altbackupFileURL = Bundle.main.url(forResource: "AltBackup", withExtension: "ipa") else { throw OperationError.appNotFound }
-                    
+                    guard let altbackupFileURL = Bundle.main.url(forResource: "AltBackup", withExtension: "ipa") else { throw OperationError.appNotFound(name: app.name) }
+
                     let unzippedAppBundleURL = try FileManager.default.unzipAppBundle(at: altbackupFileURL, toDirectory: temporaryDirectoryURL)
                     guard let unzippedAppBundle = Bundle(url: unzippedAppBundleURL) else { throw OperationError.invalidApp }
                     
@@ -1672,11 +1948,35 @@ private extension AppManager
             do { try installedApp.managedObjectContext?.save() }
             catch { print("Error saving installed app.", error) }
         }
-        catch
+        catch let nsError as NSError
         {
+            var appName: String!
+            if let app = operation.app as? (NSManagedObject & AppProtocol) {
+                if let context = app.managedObjectContext {
+                    context.performAndWait {
+                        appName = app.name
+                    }
+                } else {
+                    appName = NSLocalizedString("Unknown App", comment: "")
+                }
+            } else {
+                appName = operation.app.name
+            }
+
+            let localizedTitle: String
+            switch operation {
+            case .install: localizedTitle = String(format: NSLocalizedString("Failed to Install %@", comment: ""), appName)
+            case .refresh: localizedTitle = String(format: NSLocalizedString("Failed to Refresh %@", comment: ""), appName)
+            case .update: localizedTitle = String(format: NSLocalizedString("Failed to Update %@", comment: ""), appName)
+            case .activate: localizedTitle = String(format: NSLocalizedString("Failed to Activate %@", comment: ""), appName)
+            case .deactivate: localizedTitle = String(format: NSLocalizedString("Failed to Deactivate %@", comment: ""), appName)
+            case .backup: localizedTitle = String(format: NSLocalizedString("Failed to Backup %@", comment: ""), appName)
+            case .restore: localizedTitle = String(format: NSLocalizedString("Failed to Restore %@ Backup", comment: ""), appName)
+            }
+            let error = nsError.withLocalizedTitle(localizedTitle)
             group.set(.failure(error), forAppWithBundleIdentifier: operation.bundleIdentifier)
             
-            self.log(error, for: operation)
+            self.log(error, operation: operation.loggedErrorOperation, app: operation.app)
         }
     }
     
@@ -1693,8 +1993,8 @@ private extension AppManager
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeIntervalUntilNotification, repeats: false)
         
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("AltStore Expiring Soon", comment: "")
-        content.body = NSLocalizedString("AltStore will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
+        content.title = NSLocalizedString("SideStore Expiring Soon", comment: "")
+        content.body = NSLocalizedString("SideStore will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
         content.sound = .default
         
         let request = UNNotificationRequest(identifier: AppManager.expirationWarningNotificationID, content: content, trigger: trigger)
@@ -1704,7 +2004,7 @@ private extension AppManager
     func log(_ error: Error, for operation: AppOperation)
     {
         // Sanitize NSError on same thread before performing background task.
-        let sanitizedError = (error as NSError).sanitizedForCoreData()
+        let sanitizedError = (error as NSError).sanitizedForSerialization()
         
         let loggedErrorOperation: LoggedError.Operation = {
             switch operation

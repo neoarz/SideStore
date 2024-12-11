@@ -3,6 +3,34 @@
 # Ensure we are in Dependencies directory
 cd "$(dirname "$0")"
 
+# Detect if Homebrew is in /opt/homebrew (Apple Silicon) or /usr/local (Intel)
+if [[ -d "/opt/homebrew" ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+elif [[ -d "/usr/local" ]]; then
+    export PATH="/usr/local/bin:$PATH"
+fi
+
+# Check if wget and curl are installed; if not, install them via Homebrew
+if ! command -v wget &> /dev/null; then
+    echo "wget not found, attempting to install via Homebrew..."
+    if command -v brew &> /dev/null; then
+        brew install wget
+    else
+        echo "Homebrew is not installed. Please install Homebrew and rerun the script."
+        exit 1
+    fi
+fi
+
+if ! command -v curl &> /dev/null; then
+    echo "curl not found, attempting to install via Homebrew..."
+    if command -v brew &> /dev/null; then
+        brew install curl
+    else
+        echo "Homebrew is not installed. Please install Homebrew and rerun the script."
+        exit 1
+    fi
+fi
+
 check_for_update() {
     if [ -f ".skip-prebuilt-fetch-$1" ]; then
         echo "Skipping prebuilt fetch for $1 since .skip-prebuilt-fetch-$1 exists. If you are developing $1 alongside SideStore, don't remove this file, or this script will replace your locally built binaries with the ones built by GitHub Actions."
@@ -29,7 +57,7 @@ check_for_update() {
             echo
             wget -O "$1/lib$1-sim.a" "https://github.com/SideStore/$1/releases/latest/download/lib$1-sim.a"
             if [[ "$1" != "minimuxer" ]]; then
-                wget -O "$1/lib$1.a" "https://github.com/SideStore/$1/releases/latest/download/lib$1.a"
+                wget -O "$1/lib$1-ios.a" "https://github.com/SideStore/$1/releases/latest/download/lib$1.a"
                 wget -O "$1/$1.h" "https://github.com/SideStore/$1/releases/latest/download/$1.h"
                 echo
             else
@@ -39,7 +67,9 @@ check_for_update() {
                 echo "Unzipping generated.zip"
                 cd "$1"
                 unzip ./generated.zip
-                mv -v generated/* .
+                cp -v generated/* .
+                # Remove all files except ones that comes checked-in from minimuxer repository
+                find generated -type f ! -name 'minimuxer-Bridging-Header.h' ! -name 'minimuxer-helpers.swift' -exec rm -v {} \;
                 rm generated.zip
                 rmdir generated/
                 cd ..

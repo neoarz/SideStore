@@ -10,6 +10,3 @@
 <!-- Example: -->
 - [x] Finish UI changes
 - [ ] Test
-
-<!-- If your PR doesn't close an issue, you can remove the next line. -->
-Closes #1234

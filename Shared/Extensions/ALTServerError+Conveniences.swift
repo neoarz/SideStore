@@ -22,12 +22,8 @@ public extension ALTServerError
         case is EncodingError: self = ALTServerError(.invalidResponse, underlyingError: error)
         case let error as NSError:
             var userInfo = error.userInfo
-            if !userInfo.keys.contains(NSUnderlyingErrorKey)
-            {
-                // Assign underlying error (if there isn't already one).
-                userInfo[NSUnderlyingErrorKey] = error
-            }
-            
+            userInfo[NSUnderlyingErrorKey] = error
+
             self = ALTServerError(.underlyingError, userInfo: userInfo)
         }
     }

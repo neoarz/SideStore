@@ -8,6 +8,7 @@
 
 import Foundation
 
+import minimuxer
 import AltStoreCore
 
 @available(iOS 14, *)
@@ -39,8 +40,12 @@ final class IntentHandler: NSObject, RefreshAllIntentHandling
         
         // Give ourselves 9 extra seconds before starting handle() timeout timer.
         // 10 seconds or longer results in timeout regardless.
-        self.queue.asyncAfter(deadline: .now() + 9.0) {
-            self.finish(intent, response: RefreshAllIntentResponse(code: .ready, userActivity: nil))
+        self.queue.asyncAfter(deadline: .now() + 8.0) {
+            if minimuxer.ready() {
+                self.finish(intent, response: RefreshAllIntentResponse(code: .success, userActivity: nil))
+            } else {
+                self.finish(intent, response: RefreshAllIntentResponse(code: .failure, userActivity: nil))
+            }
         }
         
         if !DatabaseManager.shared.isStarted
@@ -52,12 +57,14 @@ final class IntentHandler: NSObject, RefreshAllIntentHandling
                 }
                 else
                 {
+                    self.finish(intent, response: RefreshAllIntentResponse(code: .ready, userActivity: nil))
                     self.refreshApps(intent: intent)
                 }
             }
         }
         else
         {
+            self.finish(intent, response: RefreshAllIntentResponse(code: .ready, userActivity: nil))
             self.refreshApps(intent: intent)
         }
     }
@@ -83,6 +90,11 @@ final class IntentHandler: NSObject, RefreshAllIntentHandling
                     // We took too long to finish and return the final result,
                     // so we'll now present a normal notification when finished.
                     operation.presentsFinishedNotification = true
+                    if minimuxer.ready() {
+                        self.finish(intent, response: RefreshAllIntentResponse(code: .success, userActivity: nil))
+                    } else {
+                        self.finish(intent, response: RefreshAllIntentResponse(code: .failure, userActivity: nil))
+                    }
                 }
                 
                 self.finish(intent, response: RefreshAllIntentResponse(code: .inProgress, userActivity: nil))
@@ -106,6 +118,9 @@ private extension IntentHandler
             {
                 // Queue response in case refreshing finishes after confirm() but before handle().
                 self.queuedResponses[intent] = response
+                DispatchQueue.main.async {
+                    UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
+                }
             }
         }
     }
@@ -126,10 +141,12 @@ private extension IntentHandler
                     }
                     
                     self.finish(intent, response: RefreshAllIntentResponse(code: .success, userActivity: nil))
+                    UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
                 }
-                catch RefreshError.noInstalledApps
+                catch ~RefreshErrorCode.noInstalledApps
                 {
                     self.finish(intent, response: RefreshAllIntentResponse(code: .success, userActivity: nil))
+                    UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
                 }
                 catch let error as NSError
                 {

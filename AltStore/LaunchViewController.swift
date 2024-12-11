@@ -49,6 +49,43 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
+        if #available(iOS 17, *), !UserDefaults.standard.sidejitenable {
+            DispatchQueue.global().async {
+                self.isSideJITServerDetected() { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success():
+                            let dialogMessage = UIAlertController(title: "SideJITServer Detected", message: "Would you like to enable SideJITServer", preferredStyle: .alert)
+                            
+                            // Create OK button with action handler
+                            let ok = UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+                                UserDefaults.standard.sidejitenable = true
+                            })
+                            
+                            let cancel = UIAlertAction(title: "Cancel", style: .cancel)
+                            //Add OK button to a dialog message
+                            dialogMessage.addAction(ok)
+                            dialogMessage.addAction(cancel)
+                            
+                            // Present Alert to
+                            self.present(dialogMessage, animated: true, completion: nil)
+                        case .failure(_):
+                            print("Cannot find sideJITServer")
+                        }
+                    }
+                }
+            }
+        }
+        
+        if #available(iOS 17, *), UserDefaults.standard.sidejitenable {
+            DispatchQueue.global().async {
+                self.askfornetwork()
+            }
+            print("SideJITServer Enabled")
+        }
+        
+        
+        
         #if !targetEnvironment(simulator)
         start_em_proxy(bind_addr: Consts.Proxy.serverURL)
         
@@ -58,6 +95,46 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
         }
         start_minimuxer_threads(pf)
         #endif
+    }
+    
+    func askfornetwork() {
+        let address = UserDefaults.standard.textInputSideJITServerurl ?? ""
+        
+        var SJSURL = address
+        
+        if (UserDefaults.standard.textInputSideJITServerurl ?? "").isEmpty {
+          SJSURL = "http://sidejitserver._http._tcp.local:8080"
+        }
+        
+        // Create a network operation at launch to Refresh SideJITServer
+        let url = URL(string: "\(SJSURL)/re/")!
+        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            print(data)
+        }
+        task.resume()
+    }
+    
+    func isSideJITServerDetected(completion: @escaping (Result<Void, Error>) -> Void) {
+        let address = UserDefaults.standard.textInputSideJITServerurl ?? ""
+        
+        var SJSURL = address
+        
+        if (UserDefaults.standard.textInputSideJITServerurl ?? "").isEmpty {
+          SJSURL = "http://sidejitserver._http._tcp.local:8080"
+        }
+        
+        // Create a network operation at launch to Refresh SideJITServer
+        let url = URL(string: SJSURL)!
+        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            if let error = error {
+                print("No SideJITServer on Network")
+                completion(.failure(error))
+                return
+            }
+            completion(.success(()))
+        }
+        task.resume()
+        return
     }
     
     func fetchPairingFile() -> String? {
@@ -72,16 +149,17 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
             fm.fileExists(atPath: appResourcePath.path),
             let data = fm.contents(atPath: appResourcePath.path),
             let contents = String(data: data, encoding: .utf8),
-            !contents.isEmpty  {
+            !contents.isEmpty,
+            !UserDefaults.standard.isPairingReset {
             print("Loaded ALTPairingFile from \(appResourcePath.path)")
             return contents
-        } else if let plistString = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String, !plistString.isEmpty, !plistString.contains("insert pairing file here"){
+        } else if let plistString = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String, !plistString.isEmpty, !plistString.contains("insert pairing file here"), !UserDefaults.standard.isPairingReset{
             print("Loaded ALTPairingFile from Info.plist")
             return plistString
         } else {
             // Show an alert explaining the pairing file
             // Create new Alert
-            let dialogMessage = UIAlertController(title: "Pairing File", message: "Select the pairing file for your device. For more information, go to https://wiki.sidestore.io/guides/install#pairing-process", preferredStyle: .alert)
+            let dialogMessage = UIAlertController(title: "Pairing File", message: "Select the pairing file or select \"Help\" for help.", preferredStyle: .alert)
             
             // Create OK button with action handler
             let ok = UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
@@ -93,13 +171,32 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
                 documentPickerController.shouldShowFileExtensions = true
                 documentPickerController.delegate = self
                 self.present(documentPickerController, animated: true, completion: nil)
+                UserDefaults.standard.isPairingReset = false
              })
             
-            //Add OK button to a dialog message
+            //Add "help" button to take user to wiki
+            let wikiOption = UIAlertAction(title: "Help", style: .default) { (action) in
+                let wikiURL: String = "https://docs.sidestore.io/docs/getting-started/pairing-file"
+                if let url = URL(string: wikiURL) {
+                    UIApplication.shared.open(url)
+                }
+                sleep(2)
+                exit(0)
+            }
+            
+            //Add buttons to dialog message
+            dialogMessage.addAction(wikiOption)
             dialogMessage.addAction(ok)
 
             // Present Alert to
             self.present(dialogMessage, animated: true, completion: nil)
+
+            let dialogMessage2 = UIAlertController(title: "Analytics", message: "This app contains anonymous analytics for research and project development. By continuing to use this app, you are consenting to this data collection", preferredStyle: .alert)
+
+            let ok2 = UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in})
+            
+            dialogMessage2.addAction(ok2)
+            self.present(dialogMessage2, animated: true, completion: nil)
 
             return nil
         }
@@ -155,7 +252,12 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
             try! FileManager.default.removeItem(at: FileManager.default.documentsDirectory.appendingPathComponent("\(pairingFileName)"))
             displayError("minimuxer failed to start, please restart SideStore. \((error as? LocalizedError)?.failureReason ?? "UNKNOWN ERROR!!!!!! REPORT TO GITHUB ISSUES!")")
         }
-        start_auto_mounter(documentsDirectory)
+        if #available(iOS 17, *) {
+            // TODO: iOS 17 and above have a new JIT implementation that is completely broken in SideStore :(
+        }
+        else {
+            start_auto_mounter(documentsDirectory)
+        }
     }
 }
 

@@ -146,7 +146,7 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
     @NSManaged @objc(source) public var _source: Source?
     @NSManaged @objc(permissions) public var _permissions: NSOrderedSet
     
-    @NSManaged public private(set) var latestVersion: AppVersion?
+    @NSManaged @objc(latestVersion) public private(set) var latestSupportedVersion: AppVersion?
     @NSManaged @objc(versions) public private(set) var _versions: NSOrderedSet
     
     @NSManaged public private(set) var loggedErrors: NSSet /* Set<LoggedError> */ // Use NSSet to avoid eagerly fetching values.
@@ -170,27 +170,27 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
     }
     
     @nonobjc public var size: Int64? {
-        guard let version = self.latestVersion else { return nil }
+        guard let version = self.latestSupportedVersion else { return nil }
         return version.size
     }
     
     @nonobjc public var version: String? {
-        guard let version = self.latestVersion else { return nil }
+        guard let version = self.latestSupportedVersion else { return nil }
         return version.version
     }
     
     @nonobjc public var versionDescription: String? {
-        guard let version = self.latestVersion else { return nil }
+        guard let version = self.latestSupportedVersion else { return nil }
         return version.localizedDescription
     }
     
     @nonobjc public var versionDate: Date? {
-        guard let version = self.latestVersion else { return nil }
+        guard let version = self.latestSupportedVersion else { return nil }
         return version.date
     }
     
     @nonobjc public var downloadURL: URL? {
-        guard let version = self.latestVersion else { return nil }
+        guard let version = self.latestSupportedVersion else { return nil }
         return version.downloadURL
     }
     
@@ -314,16 +314,30 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
     }
 }
 
-private extension StoreApp
+internal extension StoreApp
 {
     func setVersions(_ versions: [AppVersion])
     {
-        guard let latestVersion = versions.first else { preconditionFailure("StoreApp must have at least one AppVersion.") }
-        
-        self.latestVersion = latestVersion
         self._versions = NSOrderedSet(array: versions)
         
+        let latestSupportedVersion = versions.first(where: { $0.isSupported })
+        self.latestSupportedVersion = latestSupportedVersion
+        
+        for case let version as AppVersion in self._versions
+        {
+            if version == latestSupportedVersion
+            {
+                version.latestSupportedVersionApp = self
+            }
+            else
+            {
+                // Ensure we replace any previous relationship when merging.
+                version.latestSupportedVersionApp = nil
+            }
+        }
+                
         // Preserve backwards compatibility by assigning legacy property values.
+        guard let latestVersion = versions.first else { preconditionFailure("StoreApp must have at least one AppVersion.") }
         self._version = latestVersion.version
         self._versionDate = latestVersion.date
         self._versionDescription = latestVersion.localizedDescription
@@ -334,6 +348,10 @@ private extension StoreApp
 
 public extension StoreApp
 {
+    var latestAvailableVersion: AppVersion? {
+        return self._versions.firstObject as? AppVersion
+    }
+    
     @nonobjc class func fetchRequest() -> NSFetchRequest<StoreApp>
     {
         return NSFetchRequest<StoreApp>(entityName: "StoreApp")

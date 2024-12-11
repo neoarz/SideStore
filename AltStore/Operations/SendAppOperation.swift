@@ -33,11 +33,12 @@ final class SendAppOperation: ResultOperation<()>
         
         if let error = self.context.error
         {
-            self.finish(.failure(error))
-            return
+            return self.finish(.failure(error))
         }
         
-        guard let resignedApp = self.context.resignedApp else { return self.finish(.failure(OperationError.invalidParameters)) }
+        guard let resignedApp = self.context.resignedApp else {
+            return self.finish(.failure(OperationError.invalidParameters("SendAppOperation.main: self.resignedApp is nil")))
+        }
         
         // self.context.resignedApp.fileURL points to the app bundle, but we want the .ipa.
         let app = AnyApp(name: resignedApp.name, bundleIdentifier: self.context.bundleIdentifier, url: resignedApp.fileURL)
@@ -49,15 +50,16 @@ final class SendAppOperation: ResultOperation<()>
             do {
                 let bytes = Data(data).toRustByteSlice()
                 try yeet_app_afc(app.bundleIdentifier, bytes.forRust())
+                self.progress.completedUnitCount += 1
+                self.finish(.success(()))
             } catch {
-                return self.finish(.failure(error))
+                self.finish(.failure(MinimuxerError.RwAfc))
+                self.progress.completedUnitCount += 1
+                self.finish(.success(()))
             }
-            
-            self.progress.completedUnitCount += 1
-            self.finish(.success(()))
         } else {
             print("IPA doesn't exist????")
-            self.finish(.failure(ALTServerError(.underlyingError)))
+            self.finish(.failure(OperationError(.appNotFound(name: resignedApp.name))))
         }
     }
 }

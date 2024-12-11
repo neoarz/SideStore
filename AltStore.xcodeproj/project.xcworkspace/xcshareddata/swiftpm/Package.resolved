@@ -1,4 +1,5 @@
 {
+  "originHash" : "ee46302f91cbb62c5234c36750d40856658e961e191f5536cf4fe74d10fc2c94",
   "pins" : [
     {
       "identity" : "altsign",
@@ -6,7 +7,7 @@
       "location" : "https://github.com/SideStore/AltSign",
       "state" : {
         "branch" : "master",
-        "revision" : "7e0e7edcf8fbc44ac1e35da3e9030a297aa18b84"
+        "revision" : "cc6189f0f7cd8e5bd24943af9322e0ff9420e9f4"
       }
     },
     {
@@ -14,8 +15,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/microsoft/appcenter-sdk-apple.git",
       "state" : {
-        "revision" : "8354a50fe01a7e54e196d3b5493b5ab53dd5866a",
-        "version" : "4.4.2"
+        "revision" : "b2dc99cfedead0bad4e6573d86c5228c89cff332",
+        "version" : "4.4.3"
+      }
+    },
+    {
+      "identity" : "imobiledevice.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SideStore/iMobileDevice.swift",
+      "state" : {
+        "revision" : "74e481106dd155c0cd21bca6795fd9fe5f751654",
+        "version" : "1.0.5"
       }
     },
     {
@@ -50,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/krzyzanowskim/OpenSSL",
       "state" : {
-        "revision" : "033fcb41dac96b1b6effa945ca1f9ade002370b2",
-        "version" : "1.1.1501"
+        "revision" : "8cb1d641ab5ebce2cd7cf31c93baef07bed672d4",
+        "version" : "1.1.2301"
       }
     },
     {
@@ -59,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/microsoft/PLCrashReporter.git",
       "state" : {
-        "revision" : "6b27393cad517c067dceea85fadf050e70c4ceaa",
-        "version" : "1.10.1"
+        "revision" : "81cdec2b3827feb03286cb297f4c501a8eb98df1",
+        "version" : "1.10.2"
       }
     },
     {
@@ -68,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwiftPackageIndex/SemanticVersion.git",
       "state" : {
-        "revision" : "fc670910dc0903cc269b3d0b776cda5703979c4e",
-        "version" : "0.3.5"
+        "revision" : "ea8eea9d89842a29af1b8e6c7677f1c86e72fa42",
+        "version" : "0.4.0"
       }
     },
     {
@@ -77,8 +87,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle.git",
       "state" : {
-        "revision" : "286edd1fa22505a9e54d170e9fd07d775ea233f2",
-        "version" : "2.1.0"
+        "revision" : "0ef1ee0220239b3776f433314515fd849025673f",
+        "version" : "2.6.4"
+      }
+    },
+    {
+      "identity" : "starscream",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/daltoniam/Starscream.git",
+      "state" : {
+        "revision" : "c6bfd1af48efcc9a9ad203665db12375ba6b145a",
+        "version" : "4.0.8"
       }
     },
     {
@@ -91,5 +110,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

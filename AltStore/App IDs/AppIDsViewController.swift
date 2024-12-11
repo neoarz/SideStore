@@ -90,14 +90,21 @@ private extension AppIDsViewController
                 cell.bannerView.button.isUserInteractionEnabled = false
                 
                 cell.bannerView.buttonLabel.isHidden = false
-                
+
                 let currentDate = Date()
                 
-                let numberOfDays = expirationDate.numberOfCalendarDays(since: currentDate)
-                let numberOfDaysText = (numberOfDays == 1) ? NSLocalizedString("1 day", comment: "") : String(format: NSLocalizedString("%@ days", comment: ""), NSNumber(value: numberOfDays))
-                cell.bannerView.button.setTitle(numberOfDaysText.uppercased(), for: .normal)
+                let formatter = DateComponentsFormatter()
+                formatter.unitsStyle = .full
+                formatter.includesApproximationPhrase = false
+                formatter.includesTimeRemainingPhrase = false
+                formatter.allowedUnits = [.minute, .hour, .day]
+                formatter.maximumUnitCount = 1
                 
-                attributedAccessibilityLabel.mutableString.append(String(format: NSLocalizedString("Expires in %@.", comment: ""), numberOfDaysText) + " ")
+                cell.bannerView.button.setTitle((formatter.string(from: currentDate, to: expirationDate) ?? NSLocalizedString("Unknown", comment: "")).uppercased(), for: .normal)
+                
+                // formatter.includesTimeRemainingPhrase = true
+                
+                // attributedAccessibilityLabel.mutableString.append((formatter.string(from: currentDate, to: expirationDate) ?? NSLocalizedString("Unknown", comment: "")) + " ")
             }
             else
             {

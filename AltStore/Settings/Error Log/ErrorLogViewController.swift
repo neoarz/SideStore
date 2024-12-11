@@ -21,6 +21,13 @@ final class ErrorLogViewController: UITableViewController
     private lazy var dataSource = self.makeDataSource()
     private var expandedErrorIDs = Set<NSManagedObjectID>()
     
+    private var isScrolling = false {
+        didSet {
+            guard self.isScrolling != oldValue else { return }
+            self.updateButtonInteractivity()
+        }
+    }
+
     private lazy var timeFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .none
@@ -38,6 +45,15 @@ final class ErrorLogViewController: UITableViewController
         
         self.tableView.dataSource = self.dataSource
         self.tableView.prefetchDataSource = self.dataSource
+    }
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let loggedError = sender as? LoggedError, segue.identifier == "showErrorDetails" else { return }
+
+        let navigationController = segue.destination as! UINavigationController
+
+        let errorDetailsViewController = navigationController.viewControllers.first as! ErrorDetailsViewController
+        errorDetailsViewController.loggedError = loggedError
     }
 }
 
@@ -60,14 +76,8 @@ private extension ErrorLogViewController
             let cell = cell as! ErrorLogTableViewCell
             cell.dateLabel.text = self.timeFormatter.string(from: loggedError.date)
             cell.errorFailureLabel.text = loggedError.localizedFailure ?? NSLocalizedString("Operation Failed", comment: "")
-            
-            switch loggedError.domain
-            {
-            case AltServerErrorDomain: cell.errorCodeLabel?.text = String(format: NSLocalizedString("AltServer Error %@", comment: ""), NSNumber(value: loggedError.code))
-            case OperationError.domain: cell.errorCodeLabel?.text = String(format: NSLocalizedString("AltStore Error %@", comment: ""), NSNumber(value: loggedError.code))
-            default: cell.errorCodeLabel?.text = loggedError.error.localizedErrorCode
-            }
-            
+            cell.errorCodeLabel.text = loggedError.error.localizedErrorCode
+
             let nsError = loggedError.error as NSError
             let errorDescription = [nsError.localizedDescription, nsError.localizedRecoverySuggestion].compactMap { $0 }.joined(separator: "\n\n")
             cell.errorDescriptionTextView.text = errorDescription
@@ -93,12 +103,19 @@ private extension ErrorLogViewController
                     },
                     UIAction(title: NSLocalizedString("Search FAQ", comment: ""), image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
                         self?.searchFAQ(for: loggedError)
-                    }
+                    },
+                    UIAction(title: NSLocalizedString("View More Details", comment: ""), image: UIImage(systemName: "ellipsis.circle")) { [weak self] _ in
+                        self?.viewMoreDetails(for: loggedError)
+                    },
                 ])
 
                 cell.menuButton.menu = menu
+                cell.menuButton.showsMenuAsPrimaryAction = self.isScrolling ? false : true
+                cell.selectionStyle = .none
+            } else {
+                cell.menuButton.isUserInteractionEnabled = false
             }
-            
+
             // Include errorDescriptionTextView's text in cell summary.
             cell.accessibilityLabel = [cell.errorFailureLabel.text, cell.dateLabel.text, cell.errorCodeLabel.text, cell.errorDescriptionTextView.text].compactMap { $0 }.joined(separator: ". ")
             
@@ -232,15 +249,19 @@ private extension ErrorLogViewController
     
     func searchFAQ(for loggedError: LoggedError)
     {
-        let baseURL = URL(string: "https://faq.altstore.io/getting-started/troubleshooting-guide")!
+        let baseURL = URL(string: "https://faq.altstore.io/getting-started/error-codes")!
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
         
-        let query = [loggedError.domain, "\(loggedError.code)"].joined(separator: "+")
+        let query = [loggedError.domain, "\(loggedError.error.displayCode)"].joined(separator: "+")
         components.queryItems = [URLQueryItem(name: "q", value: query)]
         
         let safariViewController = SFSafariViewController(url: components.url ?? baseURL)
         safariViewController.preferredControlTintColor = .altPrimary
         self.present(safariViewController, animated: true)
+    }
+
+    func viewMoreDetails(for loggedError: LoggedError) {
+        self.performSegue(withIdentifier: "showErrorDetails", sender: loggedError)
     }
 }
 
@@ -248,6 +269,7 @@ extension ErrorLogViewController
 {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
+        guard #unavailable(iOS 14) else { return }
         let loggedError = self.dataSource.item(at: indexPath)
         
         let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -319,5 +341,34 @@ extension ErrorLogViewController: QLPreviewControllerDataSource {
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
         let fileURL = FileManager.default.documentsDirectory.appendingPathComponent("minimuxer.log")
         return fileURL as QLPreviewItem
+    }
+}
+
+extension ErrorLogViewController
+{
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView)
+    {
+        self.isScrolling = true
+    }
+
+    override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
+    {
+        self.isScrolling = false
+    }
+
+    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
+    {
+        guard !decelerate else { return }
+        self.isScrolling = false
+    }
+
+    private func updateButtonInteractivity()
+    {
+        guard #available(iOS 14, *) else { return }
+
+        for case let cell as ErrorLogTableViewCell in self.tableView.visibleCells
+        {
+            cell.menuButton.showsMenuAsPrimaryAction = self.isScrolling ? false : true
+        }
     }
 }

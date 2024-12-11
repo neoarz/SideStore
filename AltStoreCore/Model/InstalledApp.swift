@@ -62,14 +62,14 @@ public class InstalledApp: NSManagedObject, InstalledAppProtocol
     
     @objc public var hasUpdate: Bool {
         if self.storeApp == nil { return false }
-        if self.storeApp!.latestVersion == nil { return false }
-        
+        if self.storeApp!.latestSupportedVersion == nil { return false }
+
         let currentVersion = SemanticVersion(self.version)
-        let latestVersion = SemanticVersion(self.storeApp!.latestVersion!.version)
-        
+        let latestVersion = SemanticVersion(self.storeApp!.latestSupportedVersion!.version)
+
         if currentVersion == nil || latestVersion == nil {
             // One of the versions is not valid SemVer, fall back to comparing the version strings by character
-            return self.version < self.storeApp!.latestVersion!.version
+            return self.version < self.storeApp!.latestSupportedVersion!.version
         }
         
         return currentVersion! < latestVersion!
@@ -165,6 +165,7 @@ public extension InstalledApp
         let fetchRequest = InstalledApp.fetchRequest() as NSFetchRequest<InstalledApp>
         fetchRequest.predicate = NSPredicate(format: "%K == YES AND %K == YES",
                                              #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.hasUpdate))
+
         return fetchRequest
     }
     
@@ -192,7 +193,7 @@ public extension InstalledApp
     
     class func fetchAppsForRefreshingAll(in context: NSManagedObjectContext) -> [InstalledApp]
     {
-        var predicate = NSPredicate(format: "%K == YES AND %K != %@", #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.bundleIdentifier), StoreApp.altstoreAppID)
+        let predicate = NSPredicate(format: "%K == YES AND %K != %@", #keyPath(InstalledApp.isActive), #keyPath(InstalledApp.bundleIdentifier), StoreApp.altstoreAppID)
         print("Fetch Apps for Refreshing All 'AltStore' predicate: \(String(describing: predicate))")
         
 //        if let patreonAccount = DatabaseManager.shared.patreonAccount(in: context), patreonAccount.isPatron, PatreonAPI.shared.isAuthenticated
@@ -223,7 +224,7 @@ public extension InstalledApp
         // Date 6 hours before now.
         let date = Date().addingTimeInterval(-1 * 6 * 60 * 60)
         
-        var predicate = NSPredicate(format: "(%K == YES) AND (%K < %@) AND (%K != %@)",
+        let predicate = NSPredicate(format: "(%K == YES) AND (%K < %@) AND (%K != %@)",
                                     #keyPath(InstalledApp.isActive),
                                     #keyPath(InstalledApp.refreshedDate), date as NSDate,
                                     #keyPath(InstalledApp.bundleIdentifier), StoreApp.altstoreAppID)
@@ -275,14 +276,12 @@ public extension InstalledApp
         
         do { try FileManager.default.createDirectory(at: appsDirectoryURL, withIntermediateDirectories: true, attributes: nil) }
         catch { print("Creating App Directory Error: \(error)") }
-        print("`appsDirectoryURL` is set to: \(appsDirectoryURL.absoluteString)")
         return appsDirectoryURL
     }
     
     class var legacyAppsDirectoryURL: URL {
         let baseDirectory = FileManager.default.applicationSupportDirectory
         let appsDirectoryURL = baseDirectory.appendingPathComponent("Apps")
-        print("legacy `appsDirectoryURL` is set to: \(appsDirectoryURL.absoluteString)")
         return appsDirectoryURL
     }
     

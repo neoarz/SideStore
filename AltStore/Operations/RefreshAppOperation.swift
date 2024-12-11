@@ -35,31 +35,33 @@ final class RefreshAppOperation: ResultOperation<InstalledApp>
         
         do
         {
-            if let error = self.context.error
-            {
-                throw error
+            if let error = self.context.error {
+                print("RefreshAppOperation.main: ERROR: self.context.app = \(self.context.app!); self.context.error is \(error)")
+                return self.finish(.failure(error))
             }
             
-            guard let profiles = self.context.provisioningProfiles else { throw OperationError.invalidParameters }
+            guard let profiles = self.context.provisioningProfiles else {
+                return self.finish(.failure(OperationError.invalidParameters("RefreshAppOperation.main: self.context.provisioningProfiles is nil")))
+            }
             
-            guard let app = self.context.app else { throw OperationError.appNotFound }
-            
-            DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
-                print("Sending refresh app request...")
+            guard let app = self.context.app else { return self.finish(.failure(OperationError(.appNotFound(name: nil)))) }
 
-                for p in profiles {
-                    do {
-                        let bytes = p.value.data.toRustByteSlice()
-                        try install_provisioning_profile(bytes.forRust())
-                    } catch {
-                        return self.finish(.failure(error))
-                    }
+            for p in profiles {
+                do {
+                    let bytes = p.value.data.toRustByteSlice()
+                    try install_provisioning_profile(bytes.forRust())
+                } catch {
+                    self.finish(.failure(MinimuxerError.ProfileInstall))
+                }
+
+                DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
                     
                     self.progress.completedUnitCount += 1
                     
                     let predicate = NSPredicate(format: "%K == %@", #keyPath(InstalledApp.bundleIdentifier), app.bundleIdentifier)
                     self.managedObjectContext.perform {
                         guard let installedApp = InstalledApp.first(satisfying: predicate, in: self.managedObjectContext) else {
+                            self.finish(.failure(OperationError(.appNotFound(name: app.name))))
                             return
                         }
                         installedApp.update(provisioningProfile: p.value)
@@ -71,10 +73,6 @@ final class RefreshAppOperation: ResultOperation<InstalledApp>
                     }
                 }
             }
-        }
-        catch
-        {
-            self.finish(.failure(error))
         }
     }
 }

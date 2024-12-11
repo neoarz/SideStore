@@ -31,11 +31,7 @@ final class DeactivateAppOperation: ResultOperation<InstalledApp>
     {
         super.main()
         
-        if let error = self.context.error
-        {
-            self.finish(.failure(error))
-            return
-        }
+        if let error = self.context.error { return self.finish(.failure(error)) }
         
         DatabaseManager.shared.persistentContainer.performBackgroundTask { (context) in
             let installedApp = context.object(with: self.app.objectID) as! InstalledApp
@@ -45,14 +41,14 @@ final class DeactivateAppOperation: ResultOperation<InstalledApp>
             for profile in allIdentifiers {
                 do {
                     try remove_provisioning_profile(profile)
+                    self.progress.completedUnitCount += 1
+                    installedApp.isActive = false
+                    self.finish(.success(installedApp))
+                    break
                 } catch {
-                    return self.finish(.failure(error))
+                    self.finish(.failure(error))
                 }
             }
-            
-            self.progress.completedUnitCount += 1
-            installedApp.isActive = false
-            self.finish(.success(installedApp))
         }
     }
 }

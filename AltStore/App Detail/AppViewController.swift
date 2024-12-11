@@ -217,8 +217,8 @@ final class AppViewController: UIViewController
                         
             self._shouldResetLayout = false
         }
-        
-        let statusBarHeight = UIApplication.shared.statusBarFrame.height
+                
+        let statusBarHeight = self.view.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
         let cornerRadius = self.contentViewControllerShadowView.layer.cornerRadius
         
         let inset = 12 as CGFloat
@@ -323,7 +323,7 @@ final class AppViewController: UIViewController
         
         self.backButtonContainerView.layer.cornerRadius = self.backButtonContainerView.bounds.midY
         
-        self.scrollView.scrollIndicatorInsets.top = statusBarHeight
+        self.scrollView.verticalScrollIndicatorInsets.top = statusBarHeight
         
         // Adjust content offset + size.
         let contentOffset = self.scrollView.contentOffset
@@ -384,7 +384,7 @@ private extension AppViewController
             button.progress = progress
         }
         
-        if let versionDate = self.app.latestVersion?.date, versionDate > Date()
+        if let versionDate = self.app.latestAvailableVersion?.date, versionDate > Date()
         {
             self.bannerView.button.countdownDate = versionDate
             self.navigationBarDownloadButton.countdownDate = versionDate
@@ -510,7 +510,7 @@ extension AppViewController
             catch
             {
                 DispatchQueue.main.async {
-                    let toastView = ToastView(error: error)
+                    let toastView = ToastView(error: error, opensLog: true)
                     toastView.show(in: self)
                 }
             }

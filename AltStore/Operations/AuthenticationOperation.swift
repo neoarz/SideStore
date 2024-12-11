@@ -12,8 +12,10 @@ import Network
 
 import AltStoreCore
 import AltSign
+import minimuxer
 
-enum AuthenticationError: LocalizedError
+typealias AuthenticationError = AuthenticationErrorCode.Error
+enum AuthenticationErrorCode: Int, ALTErrorEnum, CaseIterable
 {
     case noTeam
     case noCertificate
@@ -22,11 +24,11 @@ enum AuthenticationError: LocalizedError
     case missingPrivateKey
     case missingCertificate
     
-    var errorDescription: String? {
+    var errorFailureReason: String {
         switch self {
-        case .noTeam: return NSLocalizedString("Developer team could not be found.", comment: "")
+        case .noTeam: return NSLocalizedString("Your Apple ID has no developer teams?", comment: "")
+        case .noCertificate: return NSLocalizedString("The developer certificate could not be found.", comment: "")
         case .teamSelectorError: return NSLocalizedString("Error presenting team selector view.", comment: "")
-        case .noCertificate: return NSLocalizedString("Developer certificate could not be found.", comment: "")
         case .missingPrivateKey: return NSLocalizedString("The certificate's private key could not be found.", comment: "")
         case .missingCertificate: return NSLocalizedString("The certificate could not be found.", comment: "")
         }
@@ -212,8 +214,8 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate, A
                 guard
                     let account = Account.first(satisfying: NSPredicate(format: "%K == %@", #keyPath(Account.identifier), altTeam.account.identifier), in: context),
                     let team = Team.first(satisfying: NSPredicate(format: "%K == %@", #keyPath(Team.identifier), altTeam.identifier), in: context)
-                else { throw AuthenticationError.noTeam }
-                
+                else { throw AuthenticationError(.noTeam) }
+
                 // Account
                 account.isActiveAccount = true
                 
@@ -239,12 +241,11 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate, A
                 }
                 
                 let activeAppsMinimumVersion = OperatingSystemVersion(majorVersion: 13, minorVersion: 3, patchVersion: 1)
-                if team.type == .free, ProcessInfo.processInfo.isOperatingSystemAtLeast(activeAppsMinimumVersion)
-                {
+                if team.type == .free, !UserDefaults.standard.isAppLimitDisabled, ProcessInfo().sparseRestorePatched {
                     UserDefaults.standard.activeAppsLimit = ALTActiveAppsLimit
-                }
-                else
-                {
+                } else if UserDefaults.standard.isAppLimitDisabled, !ProcessInfo().sparseRestorePatched {
+                    UserDefaults.standard.activeAppsLimit = 10
+                } else {
                     UserDefaults.standard.activeAppsLimit = nil
                 }
                 
@@ -431,7 +432,7 @@ private extension AuthenticationOperation
                     }
                     else
                     {
-                        completionHandler(.failure(error ?? OperationError.unknown))
+                        completionHandler(.failure(error ?? OperationError.unknown()))
                     }
                 }
             }
@@ -448,7 +449,7 @@ private extension AuthenticationOperation
                  if let team = teams.first {
                      return completionHandler(.success(team))
                  } else {
-                     return completionHandler(.failure(AuthenticationError.noTeam))
+                     return completionHandler(.failure(AuthenticationError(.noTeam)))
                  }
              } else {
                  DispatchQueue.main.async {
@@ -459,7 +460,7 @@ private extension AuthenticationOperation
 
                      if !self.present(selectTeamViewController)
                      {
-                         return completionHandler(.failure(AuthenticationError.noTeam))
+                         return completionHandler(.failure(AuthenticationError(.noTeam)))
                      }
                  }
              }
@@ -488,20 +489,20 @@ private extension AuthenticationOperation
     {
         func requestCertificate()
         {
-            let machineName = "AltStore - " + UIDevice.current.name
+            let machineName: String = "SideStore - \(team.account.firstName)'s \(UIDevice.current.name)"
             ALTAppleAPI.shared.addCertificate(machineName: machineName, to: team, session: session) { (certificate, error) in
                 do
                 {
                     let certificate = try Result(certificate, error).get()
-                    guard let privateKey = certificate.privateKey else { throw AuthenticationError.missingPrivateKey }
-                    
+                    guard let privateKey = certificate.privateKey else { throw AuthenticationError(.missingPrivateKey) }
+
                     ALTAppleAPI.shared.fetchCertificates(for: team, session: session) { (certificates, error) in
                         do
                         {
                             let certificates = try Result(certificates, error).get()
                             
                             guard let certificate = certificates.first(where: { $0.serialNumber == certificate.serialNumber }) else {
-                                throw AuthenticationError.missingCertificate
+                                throw AuthenticationError(.missingCertificate)
                             }
                             
                             certificate.privateKey = privateKey
@@ -522,16 +523,50 @@ private extension AuthenticationOperation
         
         func replaceCertificate(from certificates: [ALTCertificate])
         {
-            guard let certificate = certificates.first(where: { $0.machineName?.starts(with: "AltStore") == true }) ?? certificates.first else { return completionHandler(.failure(AuthenticationError.noCertificate)) }
+            let ourCertificates = certificates.filter { a in
+                a.machineName?.starts(with: "SideStore") == true || a.machineName?.starts(with: "AltStore") == true
+            }
             
-            ALTAppleAPI.shared.revoke(certificate, for: team, session: session) { (success, error) in
-                if let error = error, !success
+            if ourCertificates.isEmpty {
+                return requestCertificate()
+            }
+            
+            // We don't have private keys for any of the certificates,
+            // so we need to revoke one and create a new one.
+            var certsText = ""
+            for certificate in ourCertificates {
+                if let name = certificate.machineName {
+                    certsText.append("\(name)\n")
+                }
+            }
+            
+            let alertController = UIAlertController(title: NSLocalizedString("Would you like to revoke your previous certificates?\n\(certsText)", comment: ""), message: nil, preferredStyle: .alert)
+            
+            let noAction = UIAlertAction(title: NSLocalizedString("No", comment: ""), style: .default) { (action) in
+                requestCertificate()
+            }
+            let yesAction = UIAlertAction(title: NSLocalizedString("Yes", comment: ""), style: .default) { (action) in
+                for certificate in ourCertificates {
+                    ALTAppleAPI.shared.revoke(certificate, for: team, session: session) { (success, error) in
+                        if let error = error, !success
+                        {
+                            completionHandler(.failure(error))
+                        }
+                    }
+                }
+                requestCertificate()
+            }
+            alertController.addAction(noAction)
+            alertController.addAction(yesAction)
+            
+            DispatchQueue.main.async {
+                if self.navigationController.presentingViewController != nil
                 {
-                    completionHandler(.failure(error))
+                    self.navigationController.present(alertController, animated: true, completion: nil)
                 }
                 else
                 {
-                    requestCertificate()
+                    self.presentingViewController?.present(alertController, animated: true, completion: nil)
                 }
             }
         }
@@ -579,8 +614,6 @@ private extension AuthenticationOperation
                 }
                 else
                 {
-                    // We don't have private keys for any of the certificates,
-                    // so we need to revoke one and create a new one.
                     replaceCertificate(from: certificates)
                 }
             }
@@ -593,7 +626,7 @@ private extension AuthenticationOperation
     
     func registerCurrentDevice(for team: ALTTeam, session: ALTAppleAPISession, completionHandler: @escaping (Result<ALTDevice, Error>) -> Void)
     {
-        guard let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String else {
+        guard let udid = fetch_udid()?.toString() else {
             return completionHandler(.failure(OperationError.unknownUDID))
         }
         

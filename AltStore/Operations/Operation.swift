@@ -12,7 +12,10 @@ import Roxas
 class ResultOperation<ResultType>: Operation
 {
     var resultHandler: ((Result<ResultType, Error>) -> Void)?
-    
+
+    // Should only be set by subclasses
+    var localizedFailure: String?
+
     @available(*, unavailable)
     override func finish()
     {
@@ -22,16 +25,20 @@ class ResultOperation<ResultType>: Operation
     func finish(_ result: Result<ResultType, Error>)
     {
         guard !self.isFinished else { return }
-        
+
+        var result = result
+
         if self.isCancelled
         {
-            self.resultHandler?(.failure(OperationError.cancelled))
+            result = .failure(OperationError.cancelled)
         }
-        else
-        {
-            self.resultHandler?(result)
+        else if case .failure(let nsError as NSError) = result, let localizedFailure, nsError.localizedFailure == nil {
+            // Error doesn't have its own localizedFailure, so we give it the Operation's (if it exists)
+            let error = nsError.withLocalizedFailure(localizedFailure)
+            result = .failure(error)
         }
-        
+        self.resultHandler?(result)
+
         super.finish()
     }
 }

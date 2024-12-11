@@ -22,11 +22,19 @@ public extension UserDefaults
     @NSManaged var firstLaunch: Date?
     @NSManaged var requiresAppGroupMigration: Bool
     @NSManaged var textServer: Bool
+    @NSManaged var sidejitenable: Bool
+    @NSManaged var textInputSideJITServerurl: String?
     @NSManaged var textInputAnisetteURL: String?
     @NSManaged var customAnisetteURL: String?
+    @NSManaged var menuAnisetteURL: String
+    @NSManaged var menuAnisetteList: String
+    @NSManaged var menuAnisetteServersList: [String]
     @NSManaged var preferredServerID: String?
     
     @NSManaged var isBackgroundRefreshEnabled: Bool
+    @NSManaged var isIdleTimeoutDisableEnabled: Bool
+    @NSManaged var isAppLimitDisabled: Bool
+    @NSManaged var isPairingReset: Bool
     @NSManaged var isDebugModeEnabled: Bool
     @NSManaged var presentedLaunchReminderNotification: Bool
     
@@ -42,6 +50,7 @@ public extension UserDefaults
     @NSManaged var patronsRefreshID: String?
     
     @NSManaged var trustedSourceIDs: [String]?
+    @NSManaged var trustedServerURL: String?
     
     var activeAppsLimit: Int? {
         get {
@@ -70,12 +79,17 @@ public extension UserDefaults
         let localServerSupportsRefreshing = !ProcessInfo.processInfo.isOperatingSystemAtLeast(ios14)
         
         let defaults = [
+            #keyPath(UserDefaults.isAppLimitDisabled): false,
             #keyPath(UserDefaults.isBackgroundRefreshEnabled): true,
+            #keyPath(UserDefaults.isIdleTimeoutDisableEnabled): true,
+            #keyPath(UserDefaults.isPairingReset): true,
             #keyPath(UserDefaults.isLegacyDeactivationSupported): isLegacyDeactivationSupported,
             #keyPath(UserDefaults.activeAppLimitIncludesExtensions): activeAppLimitIncludesExtensions,
             #keyPath(UserDefaults.localServerSupportsRefreshing): localServerSupportsRefreshing,
-            #keyPath(UserDefaults.requiresAppGroupMigration): true
-        ]
+            #keyPath(UserDefaults.requiresAppGroupMigration): true,
+            #keyPath(UserDefaults.menuAnisetteList): "https://servers.sidestore.io/servers.json",
+            #keyPath(UserDefaults.menuAnisetteURL): "https://ani.sidestore.io"
+        ] as [String : Any]
         
         UserDefaults.standard.register(defaults: defaults)
         UserDefaults.shared.register(defaults: defaults)

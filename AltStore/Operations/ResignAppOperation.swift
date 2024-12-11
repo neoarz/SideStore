@@ -11,6 +11,7 @@ import Roxas
 
 import AltStoreCore
 import AltSign
+import minimuxer
 
 @objc(ResignAppOperation)
 final class ResignAppOperation: ResultOperation<ALTApplication>
@@ -41,7 +42,12 @@ final class ResignAppOperation: ResultOperation<ALTApplication>
             let profiles = self.context.provisioningProfiles,
             let team = self.context.team,
             let certificate = self.context.certificate
-        else { return self.finish(.failure(OperationError.invalidParameters)) }
+        else {
+            return self.finish(.failure(OperationError.invalidParameters("ResignAppOperation.main: " +
+                                                                         "self.context.team or " +
+                                                                         "self.context.provisioningProfiles or" +
+                                                                         "self.context.certificate is nil")))
+        }
         
         // Prepare app bundle
         let prepareAppProgress = Progress.discreteProgress(totalUnitCount: 2)
@@ -115,7 +121,9 @@ private extension ResignAppOperation
             
             infoDictionary[kCFBundleIdentifierKey as String] = profile.bundleIdentifier
             infoDictionary[Bundle.Info.altBundleID] = identifier
-            infoDictionary[Bundle.Info.devicePairingString] = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String
+            infoDictionary[Bundle.Info.devicePairingString] = "<insert pairing file here>"
+            infoDictionary.removeValue(forKey: "DTXcode")
+            infoDictionary.removeValue(forKey: "DTXcodeBuild")
 
             for (key, value) in additionalInfoDictionaryValues
             {
@@ -181,9 +189,9 @@ private extension ResignAppOperation
 
                 if app.isAltStoreApp
                 {
-                    guard let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String else { throw OperationError.unknownUDID }
+                    guard let udid = fetch_udid()?.toString() as? String else { throw OperationError.unknownUDID }
                     guard let pairingFileString = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.devicePairingString) as? String else { throw OperationError.unknownUDID }                    
-                    additionalValues[Bundle.Info.devicePairingString] = pairingFileString
+                    additionalValues[Bundle.Info.devicePairingString] = "<insert pairing file here>"
                     additionalValues[Bundle.Info.deviceID] = udid
                     additionalValues[Bundle.Info.serverID] = UserDefaults.standard.preferredServerID
                     
@@ -202,7 +210,7 @@ private extension ResignAppOperation
                         // The embedded certificate + certificate identifier are already in app bundle, no need to update them.
                     }
                 }
-                else if infoDictionary.keys.contains(Bundle.Info.deviceID), let udid = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.deviceID) as? String
+                else if infoDictionary.keys.contains(Bundle.Info.deviceID), let udid = fetch_udid()?.toString() as? String
                 {
                     // There is an ALTDeviceID entry, so assume the app is using AltKit and replace it with the device's UDID.
                     additionalValues[Bundle.Info.deviceID] = udid
@@ -227,6 +235,7 @@ private extension ResignAppOperation
                 
                 // Prepare app
                 try prepare(appBundle, additionalInfoDictionaryValues: additionalValues)
+                try self.removeMissingAppExtensionReferences(from: appBundle)
                 
                 if let directory = appBundle.builtInPlugInsURL, let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil, options: [.skipsSubdirectoryDescendants])
                 {
@@ -266,5 +275,29 @@ private extension ResignAppOperation
         }
         
         return progress
+    }
+    
+    func removeMissingAppExtensionReferences(from bundle: Bundle) throws
+    {
+        // If app extensions have been removed from an app (either by AltStore or the developer),
+        // we must remove all references to them from SC_Info/Manifest.plist (if it exists).
+        
+        let scInfoURL = bundle.bundleURL.appendingPathComponent("SC_Info")
+        let manifestPlistURL = scInfoURL.appendingPathComponent("Manifest.plist")
+        
+        guard let manifestPlist = NSMutableDictionary(contentsOf: manifestPlistURL), let sinfReplicationPaths = manifestPlist["SinfReplicationPaths"] as? [String] else { return }
+        
+        // Remove references to missing files.
+        let filteredReplicationPaths = sinfReplicationPaths.filter { path in
+            guard let fileURL = URL(string: path, relativeTo: bundle.bundleURL) else { return false }
+            
+            let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
+            return fileExists
+        }
+        
+        manifestPlist["SinfReplicationPaths"] = filteredReplicationPaths
+        
+        // Save updated Manifest.plist to disk.
+        try manifestPlist.write(to: manifestPlistURL)
     }
 }

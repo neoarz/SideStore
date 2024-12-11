@@ -313,9 +313,8 @@ private extension NewsViewController
                 {
                 case .failure(OperationError.cancelled): break // Ignore
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
-                    
+                    ToastView(error: error, opensLog: true).show(in: self)
+
                 case .success: print("Installed app:", storeApp.bundleIdentifier)
                 }
                 
@@ -391,9 +390,9 @@ extension NewsViewController
             let progress = AppManager.shared.installationProgress(for: storeApp)
             footerView.bannerView.button.progress = progress
             
-            if let versionDate = storeApp.latestVersion?.date, versionDate > Date()
+            if let versionDate = storeApp.latestSupportedVersion?.date, versionDate > Date()
             {
-                footerView.bannerView.button.countdownDate = storeApp.versionDate
+                footerView.bannerView.button.countdownDate = versionDate
             }
             else
             {
@@ -425,6 +424,10 @@ extension NewsViewController: UICollectionViewDelegateFlowLayout
         {
             return previousSize
         }
+        
+        // Take layout margins into account.
+        self.prototypeCell.layoutMargins.left = self.view.layoutMargins.left
+        self.prototypeCell.layoutMargins.right = self.view.layoutMargins.right
         
         let widthConstraint = self.prototypeCell.contentView.widthAnchor.constraint(equalToConstant: collectionView.bounds.width)
         NSLayoutConstraint.activate([widthConstraint])

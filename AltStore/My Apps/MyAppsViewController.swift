@@ -10,10 +10,12 @@ import UIKit
 import MobileCoreServices
 import Intents
 import Combine
+import UniformTypeIdentifiers
 
 import AltStoreCore
 import AltSign
 import Roxas
+import minimuxer
 
 import Nuke
 
@@ -153,6 +155,13 @@ final class MyAppsViewController: UICollectionViewController
     @IBAction func unwindToMyAppsViewController(_ segue: UIStoryboardSegue)
     {
     }
+    var minimuxerStatus: Bool {
+        guard minimuxer.ready() else {
+            ToastView(error: (OperationError.noWiFi as NSError).withLocalizedTitle("No WiFi or VPN!")).show(in: self)
+            return false
+        }
+        return true
+    }
 }
 
 private extension MyAppsViewController
@@ -186,7 +195,7 @@ private extension MyAppsViewController
     func makeUpdatesDataSource() -> RSTFetchedResultsCollectionViewPrefetchingDataSource<InstalledApp, UIImage>
     {
         let fetchRequest = InstalledApp.updatesFetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InstalledApp.storeApp?.latestVersion?.date, ascending: true),
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \InstalledApp.storeApp?.latestSupportedVersion?.date, ascending: false),
                                         NSSortDescriptor(keyPath: \InstalledApp.name, ascending: true)]
         fetchRequest.returnsObjectsAsFaults = false
         
@@ -195,21 +204,21 @@ private extension MyAppsViewController
         dataSource.cellIdentifierHandler = { _ in "UpdateCell" }
         dataSource.cellConfigurationHandler = { [weak self] (cell, installedApp, indexPath) in
             guard let self = self else { return }
-            guard let app = installedApp.storeApp, let latestVersion = app.latestVersion else { return }
+            guard let app = installedApp.storeApp, let latestSupportedVersion = app.latestSupportedVersion else { return }
             
             let cell = cell as! UpdateCollectionViewCell
             cell.layoutMargins.left = self.view.layoutMargins.left
             cell.layoutMargins.right = self.view.layoutMargins.right
             
             cell.tintColor = app.tintColor ?? .altPrimary
-            cell.versionDescriptionTextView.text = app.versionDescription
+            cell.versionDescriptionTextView.text = latestSupportedVersion.localizedDescription
             
             cell.bannerView.iconImageView.image = nil
             cell.bannerView.iconImageView.isIndicatingActivity = true
             
             cell.bannerView.configure(for: app)
             
-            let versionDate = Date().relativeDateString(since: latestVersion.date, dateFormatter: self.dateFormatter)
+            let versionDate = Date().relativeDateString(since: latestSupportedVersion.date, dateFormatter: self.dateFormatter)
             cell.bannerView.subtitleLabel.text = versionDate
             
             let appName: String
@@ -223,7 +232,7 @@ private extension MyAppsViewController
                 appName = app.name
             }
             
-            cell.bannerView.accessibilityLabel = String(format: NSLocalizedString("%@ %@ update. Released on %@.", comment: ""), appName, latestVersion.version, versionDate)
+            cell.bannerView.accessibilityLabel = String(format: NSLocalizedString("%@ %@ update. Released on %@.", comment: ""), appName, latestSupportedVersion.version, versionDate)
             
             cell.bannerView.button.isIndicatingActivity = false
             cell.bannerView.button.addTarget(self, action: #selector(MyAppsViewController.updateApp(_:)), for: .primaryActionTriggered)
@@ -327,21 +336,25 @@ private extension MyAppsViewController
             let currentDate = Date()
             
             let numberOfDays = installedApp.expirationDate.numberOfCalendarDays(since: currentDate)
-            let numberOfDaysText: String
             
-            if numberOfDays == 1
-            {
-                numberOfDaysText = NSLocalizedString("1 day", comment: "")
-            }
-            else
-            {
-                numberOfDaysText = String(format: NSLocalizedString("%@ days", comment: ""), NSNumber(value: numberOfDays))
-            }
+            let formatter = DateComponentsFormatter()
+            formatter.unitsStyle = .full
+            formatter.includesApproximationPhrase = false
+            formatter.includesTimeRemainingPhrase = false
             
-            cell.bannerView.button.setTitle(numberOfDaysText.uppercased(), for: .normal)
+            formatter.allowedUnits = [.day, .hour, .minute]
+            
+            formatter.maximumUnitCount = 1
+            
+            
+            
+            cell.bannerView.button.setTitle(formatter.string(from: currentDate, to: installedApp.expirationDate)?.uppercased(), for: .normal)
+            
             cell.bannerView.button.accessibilityLabel = String(format: NSLocalizedString("Refresh %@", comment: ""), installedApp.name)
-            
-            cell.bannerView.accessibilityLabel? += ". " + String(format: NSLocalizedString("Expires in %@", comment: ""), numberOfDaysText)
+
+            formatter.includesTimeRemainingPhrase = true
+
+            cell.bannerView.accessibilityLabel? += ". " + (formatter.string(from: currentDate, to: installedApp.expirationDate) ?? NSLocalizedString("Unknown", comment: "")) + " "
             
             // Make sure refresh button is correct size.
             cell.layoutIfNeeded()
@@ -522,11 +535,9 @@ private extension MyAppsViewController
                 
                 guard !failures.isEmpty else { return }
                 
-                let toastView: ToastView
-                
                 if let failure = failures.first, results.count == 1
                 {
-                    toastView = ToastView(error: failure.value)
+                    ToastView(error: failure.value).show(in: self)
                 }
                 else
                 {
@@ -544,11 +555,10 @@ private extension MyAppsViewController
                     let error = failures.first?.value as NSError?
                     let detailText = error?.localizedFailure ?? error?.localizedFailureReason ?? error?.localizedDescription
                     
-                    toastView = ToastView(text: localizedText, detailText: detailText)
+                    let toastView = ToastView(text: localizedText, detailText: detailText, opensLog: true)
                     toastView.preferredDuration = 4.0
+                    toastView.show(in: self)
                 }
-                
-                toastView.show(in: self)
             }
             
             self.refreshGroup = nil
@@ -639,6 +649,8 @@ private extension MyAppsViewController
     
     @IBAction func refreshAllApps(_ sender: UIBarButtonItem)
     {
+        guard minimuxerStatus else { return }
+
         self.isRefreshingAllApps = true
         self.collectionView.collectionViewLayout.invalidateLayout()
 
@@ -682,8 +694,7 @@ private extension MyAppsViewController
                     self.collectionView.reloadItems(at: [indexPath])
                     
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                     
                     self.collectionView.reloadItems(at: [indexPath])
                     
@@ -701,18 +712,11 @@ private extension MyAppsViewController
     
     @IBAction func sideloadApp(_ sender: UIBarButtonItem)
     {
-        let supportedTypes: [String]
+        guard minimuxerStatus else { return }
+
+        let supportedTypes = UTType.types(tag: "ipa", tagClass: .filenameExtension, conformingTo: nil)
         
-        if let types = UTTypeCreateAllIdentifiersForTag(kUTTagClassFilenameExtension, "ipa" as CFString, nil)?.takeRetainedValue()
-        {
-            supportedTypes = (types as NSArray).map { $0 as! String }
-        }
-        else
-        {
-            supportedTypes = ["com.apple.itunes.ipa"] // Declared by the system.
-        }
-        
-        let documentPickerViewController = UIDocumentPickerViewController(documentTypes: supportedTypes, in: .import)
+        let documentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
         documentPickerViewController.delegate = self
         self.present(documentPickerViewController, animated: true, completion: nil)
     }
@@ -779,7 +783,7 @@ private extension MyAppsViewController
         }
         
         let unzipProgress = Progress.discreteProgress(totalUnitCount: 1)
-        let unzipAppOperation = BlockOperation {
+        let unzipAppOperation = BlockOperation { 
             do
             {
                 if let error = context.error
@@ -787,7 +791,9 @@ private extension MyAppsViewController
                     throw error
                 }
                 
-                guard let fileURL = context.fileURL else { throw OperationError.invalidParameters }
+                guard let fileURL = context.fileURL else {
+                    throw OperationError.invalidParameters("MyAppsViewController.sideloadApp.unzipAppOperation: context.fileURL is nil")
+                }
                 defer {
                     try? FileManager.default.removeItem(at: fileURL)
                 }
@@ -811,38 +817,7 @@ private extension MyAppsViewController
         {
             unzipAppOperation.addDependency(downloadOperation)
         }
-        
-        let removeAppExtensionsProgress = Progress.discreteProgress(totalUnitCount: 1)
-        let removeAppExtensionsOperation = RSTAsyncBlockOperation { [weak self] (operation) in
-            do
-            {
-                if let error = context.error
-                {
-                    throw error
-                }
                 
-                guard let application = context.application else { throw OperationError.invalidParameters }
-                
-                DispatchQueue.main.async {
-                    self?.removeAppExtensions(from: application) { (result) in
-                        switch result
-                        {
-                        case .success: removeAppExtensionsProgress.completedUnitCount = 1
-                        case .failure(let error): context.error = error
-                        }
-                        operation.finish()
-                    }
-                }
-            }
-            catch
-            {
-                context.error = error
-                operation.finish()
-            }
-        }
-        removeAppExtensionsOperation.addDependency(unzipAppOperation)
-        progress.addChild(removeAppExtensionsProgress, withPendingUnitCount: 5)
-        
         let installProgress = Progress.discreteProgress(totalUnitCount: 100)
         let installAppOperation = RSTAsyncBlockOperation { (operation) in
             do
@@ -852,7 +827,9 @@ private extension MyAppsViewController
                     throw error
                 }
                 
-                guard let application = context.application else { throw OperationError.invalidParameters }
+                guard let application = context.application else {
+                    throw OperationError.invalidParameters("MyAppsViewController.sideloadApp.installAppOperation: context.application is nil")
+                }
                 
                 let group = AppManager.shared.install(application, presentingViewController: self) { (result) in
                     switch result
@@ -891,22 +868,23 @@ private extension MyAppsViewController
                     completion(.failure((OperationError.cancelled)))
                     
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
-                    
+                    ToastView(error: error, opensLog: true).show(in: self)
+
                     completion(.failure(error))
                 }
             }
         }
+        
+        installAppOperation.addDependency(unzipAppOperation)
+        
         progress.addChild(installProgress, withPendingUnitCount: 65)
-        installAppOperation.addDependency(removeAppExtensionsOperation)
         
         self.sideloadingProgress = progress
         self.sideloadingProgressView.progress = 0
         self.sideloadingProgressView.isHidden = false
         self.sideloadingProgressView.observedProgress = self.sideloadingProgress
         
-        let operations = [downloadOperation, unzipAppOperation, removeAppExtensionsOperation, installAppOperation].compactMap { $0 }
+        let operations = [downloadOperation, unzipAppOperation, installAppOperation].compactMap { $0 }
         self.operationQueue.addOperations(operations, waitUntilFinished: false)
     }
     
@@ -955,49 +933,6 @@ private extension MyAppsViewController
         
         cell.bannerView.iconImageView.isIndicatingActivity = false
     }
-    
-    func removeAppExtensions(from application: ALTApplication, completion: @escaping (Result<Void, Error>) -> Void)
-    {
-        guard !application.appExtensions.isEmpty else { return completion(.success(())) }
-        
-        let firstSentence: String
-        
-        if UserDefaults.standard.activeAppLimitIncludesExtensions
-        {
-            firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to 3 active apps and app extensions.", comment: "")
-        }
-        else
-        {
-            firstSentence = NSLocalizedString("Non-developer Apple IDs are limited to creating 10 App IDs per week.", comment: "")
-        }
-        
-        let message = firstSentence + " " + NSLocalizedString("Would you like to remove this app's extensions so they don't count towards your limit?", comment: "")
-        
-        let alertController = UIAlertController(title: NSLocalizedString("App Contains Extensions", comment: ""), message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style, handler: { (action) in
-            completion(.failure(OperationError.cancelled))
-        }))
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Keep App Extensions", comment: ""), style: .default) { (action) in
-            completion(.success(()))
-        })
-        alertController.addAction(UIAlertAction(title: NSLocalizedString("Remove App Extensions", comment: ""), style: .destructive) { (action) in
-            do
-            {
-                for appExtension in application.appExtensions
-                {
-                    try FileManager.default.removeItem(at: appExtension.fileURL)
-                }
-                
-                completion(.success(()))
-            }
-            catch
-            {
-                completion(.failure(error))
-            }
-        })
-        
-        self.present(alertController, animated: true, completion: nil)
-    }
 }
 
 private extension MyAppsViewController
@@ -1007,13 +942,14 @@ private extension MyAppsViewController
         UIApplication.shared.open(installedApp.openAppURL) { success in
             guard !success else { return }
             
-            let toastView = ToastView(error: OperationError.openAppFailed(name: installedApp.name))
-            toastView.show(in: self)
+            ToastView(error: OperationError.openAppFailed(name: installedApp.name), opensLog: true).show(in: self)
         }
     }
     
     func refresh(_ installedApp: InstalledApp)
     {
+        guard minimuxerStatus else { return }
+
         let previousProgress = AppManager.shared.refreshProgress(for: installedApp)
         guard previousProgress == nil else {
             previousProgress?.cancel()
@@ -1035,6 +971,8 @@ private extension MyAppsViewController
     
     func activate(_ installedApp: InstalledApp)
     {
+        guard minimuxerStatus else { return }
+
         func finish(_ result: Result<InstalledApp, Error>)
         {
             do
@@ -1055,13 +993,12 @@ private extension MyAppsViewController
                 DispatchQueue.main.async {
                     installedApp.isActive = false
                     
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
         }
                 
-        if UserDefaults.standard.activeAppsLimit != nil, #available(iOS 13, *)
+        if !UserDefaults.standard.isAppLimitDisabled && UserDefaults.standard.activeAppsLimit != nil, #available(iOS 13, *)
         {
             // UserDefaults.standard.activeAppsLimit is only non-nil on iOS 13.3.1 or later, so the #available check is just so we can use Combine.
             
@@ -1110,7 +1047,8 @@ private extension MyAppsViewController
     
     func deactivate(_ installedApp: InstalledApp, completionHandler: ((Result<InstalledApp, Error>) -> Void)? = nil)
     {
-        guard installedApp.isActive else { return }
+        guard installedApp.isActive, minimuxerStatus else { return }
+
         installedApp.isActive = false
         
         AppManager.shared.deactivate(installedApp, presentingViewController: self) { (result) in
@@ -1123,13 +1061,12 @@ private extension MyAppsViewController
             }
             catch
             {
-                print("Failed to activate app:", error)
+                print("Failed to deactivate app:", error)
                 
                 DispatchQueue.main.async {
                     installedApp.isActive = true
                     
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
             
@@ -1151,7 +1088,7 @@ private extension MyAppsViewController
             message = NSLocalizedString("This will also erase all backup data for this app.", comment: "")
         }
 
-        let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(.cancel)
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Remove", comment: ""), style: .destructive, handler: { (action) in
             AppManager.shared.remove(installedApp) { (result) in
@@ -1160,8 +1097,7 @@ private extension MyAppsViewController
                 case .success: break
                 case .failure(let error):
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: self)
                     }
                 }
             }
@@ -1172,6 +1108,8 @@ private extension MyAppsViewController
     
     func backup(_ installedApp: InstalledApp)
     {
+        guard minimuxerStatus else { return }
+
         let title = NSLocalizedString("Start Backup?", comment: "")
         let message = NSLocalizedString("This will replace any previous backups. Please leave SideStore open until the backup is complete.", comment: "")
 
@@ -1193,9 +1131,8 @@ private extension MyAppsViewController
                     print("Failed to back up app:", error)
                     
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
-                        
+                        ToastView(error: error, opensLog: true).show(in: self)
+
                         self.collectionView.reloadSections([Section.activeApps.rawValue, Section.inactiveApps.rawValue])
                     }
                 }
@@ -1211,6 +1148,8 @@ private extension MyAppsViewController
     
     func restore(_ installedApp: InstalledApp)
     {
+        guard minimuxerStatus else { return }
+
         let message = String(format: NSLocalizedString("This will replace all data you currently have in %@.", comment: ""), installedApp.name)
         let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to restore this backup?", comment: ""), message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)
@@ -1228,8 +1167,7 @@ private extension MyAppsViewController
                     print("Failed to restore app:", error)
                     
                     DispatchQueue.main.async {
-                        let toastView = ToastView(error: error)
-                        toastView.show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: self)
                     }
                 }
             }
@@ -1246,8 +1184,11 @@ private extension MyAppsViewController
     {
         guard let backupURL = FileManager.default.backupDirectoryURL(for: installedApp) else { return }
         
-        let documentPicker = UIDocumentPickerViewController(url: backupURL, in: .exportToService)
-        documentPicker.delegate = self
+        let documentPicker = UIDocumentPickerViewController(forExporting: [backupURL], asCopy: true)
+        
+        // Don't set delegate to avoid conflicting with import callbacks.
+        // documentPicker.delegate = self
+        
         self.present(documentPicker, animated: true, completion: nil)
     }
     
@@ -1301,8 +1242,7 @@ private extension MyAppsViewController
                 print("Failed to change app icon.", error)
                 
                 DispatchQueue.main.async {
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
                 }
             }
         }
@@ -1311,14 +1251,28 @@ private extension MyAppsViewController
     @available(iOS 14, *)
     func enableJIT(for installedApp: InstalledApp)
     {
+        
+        let sidejitenabled = UserDefaults.standard.sidejitenable
+        
+        if #unavailable(iOS 17) {
+            guard minimuxerStatus else { return }
+        }
+        
+
+        if #available(iOS 17, *), !sidejitenabled {
+            ToastView(error: (OperationError.tooNewError as NSError).withLocalizedTitle("No iOS 17 On Device JIT!"), opensLog: true).show(in: self)
+            AppManager.shared.log(OperationError.tooNewError, operation: .enableJIT, app: installedApp)
+            return
+        }
+        
         AppManager.shared.enableJIT(for: installedApp) { result in
             DispatchQueue.main.async {
                 switch result
                 {
                 case .success: break
                 case .failure(let error):
-                    let toastView = ToastView(error: error)
-                    toastView.show(in: self)
+                    ToastView(error: error, opensLog: true).show(in: self)
+                    AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
                 }
             }
         }
@@ -1404,7 +1358,7 @@ extension MyAppsViewController
                 headerView.layoutMargins.left = self.view.layoutMargins.left
                 headerView.layoutMargins.right = self.view.layoutMargins.right
                 
-                if UserDefaults.standard.activeAppsLimit == nil
+                if UserDefaults.standard.activeAppsLimit == nil || UserDefaults.standard.isAppLimitDisabled
                 {
                     headerView.textLabel.text = NSLocalizedString("Installed", comment: "")
                 }
@@ -1465,7 +1419,7 @@ extension MyAppsViewController
                 let registeredAppIDs = team.appIDs.count
                 
                 let maximumAppIDCount = 10
-                let remainingAppIDs = max(maximumAppIDCount - registeredAppIDs, 0)
+                let remainingAppIDs = maximumAppIDCount - registeredAppIDs
                 
                 if remainingAppIDs == 1
                 {
@@ -1476,7 +1430,7 @@ extension MyAppsViewController
                     footerView.textLabel.text = String(format: NSLocalizedString("%@ App IDs Remaining", comment: ""), NSNumber(value: remainingAppIDs))
                 }
                 
-                footerView.textLabel.isHidden = false
+                footerView.textLabel.isHidden = remainingAppIDs < 0
                 
             case .individual, .organization, .unknown: footerView.textLabel.isHidden = true
             @unknown default: break
@@ -1803,7 +1757,7 @@ extension MyAppsViewController: UICollectionViewDragDelegate
             return []
             
         case .activeApps, .inactiveApps:
-            guard UserDefaults.standard.activeAppsLimit != nil else { return [] }
+            guard UserDefaults.standard.activeAppsLimit != nil && !UserDefaults.standard.isAppLimitDisabled else { return [] }
             guard let cell = collectionView.cellForItem(at: indexPath as IndexPath) as? InstalledAppCollectionViewCell else { return [] }
             
             let item = self.dataSource.item(at: indexPath)
@@ -1858,6 +1812,7 @@ extension MyAppsViewController: UICollectionViewDropDelegate
     func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal
     {
         guard
+            !UserDefaults.standard.isAppLimitDisabled,
             let activeAppsLimit = UserDefaults.standard.activeAppsLimit,
             let installedApp = session.items.first?.localObject as? InstalledApp
         else { return UICollectionViewDropProposal(operation: .cancel) }
@@ -2050,15 +2005,8 @@ extension MyAppsViewController: UIDocumentPickerDelegate
     {
         guard let fileURL = urls.first else { return }
         
-        switch controller.documentPickerMode
-        {
-        case .import, .open:
-            self.sideloadApp(at: fileURL) { (result) in
-                print("Sideloaded app at \(fileURL) with result:", result)
-            }
-        
-        case .exportToService, .moveToService: break
-        @unknown default: break
+        self.sideloadApp(at: fileURL) { (result) in
+            print("Sideloaded app at \(fileURL) with result:", result)
         }
     }
 }
