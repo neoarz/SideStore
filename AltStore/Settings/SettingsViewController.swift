@@ -27,8 +27,8 @@ extension SettingsViewController
         case instructions
         case techyThings
         case credits
-        case macDirtyCow
         case debug
+        // case macDirtyCow
     }
     
     fileprivate enum AppRefreshRow: Int, CaseIterable
@@ -41,7 +41,7 @@ extension SettingsViewController
         case addToSiri
         
         static var allCases: [AppRefreshRow] {
-            var c: [AppRefreshRow] = [.backgroundRefresh, .noIdleTimeout]
+            var c: [AppRefreshRow] = [.backgroundRefresh, .noIdleTimeout, .addToSiri]
             guard #available(iOS 14, *) else { return c }
             if !ProcessInfo().sparseRestorePatched { c.append(.disableAppLimit) }
             c.append(.addToSiri)
@@ -67,9 +67,7 @@ extension SettingsViewController
     {
         case sendFeedback
         case refreshAttempts
-        case errorLog
         case refreshSideJITServer
-        case clearCache
         case resetPairingFile
         case anisetteServers
         case advancedSettings
@@ -125,12 +123,12 @@ final class SettingsViewController: UITableViewController
         self.prototypeHeaderFooterView = nib.instantiate(withOwner: nil, options: nil)[0] as? SettingsHeaderFooterView
         
         self.tableView.register(nib, forHeaderFooterViewReuseIdentifier: "HeaderFooterView")
-        
-        let debugModeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(SettingsViewController.handleDebugModeGesture(_:)))
-        debugModeGestureRecognizer.delegate = self
-        debugModeGestureRecognizer.direction = .up
-        debugModeGestureRecognizer.numberOfTouchesRequired = 3
-        self.tableView.addGestureRecognizer(debugModeGestureRecognizer)
+                
+       let debugModeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(SettingsViewController.handleDebugModeGesture(_:)))
+       debugModeGestureRecognizer.delegate = self
+       debugModeGestureRecognizer.direction = .up
+       debugModeGestureRecognizer.numberOfTouchesRequired = 3
+       self.tableView.addGestureRecognizer(debugModeGestureRecognizer)
 
         var versionString: String = ""
         if let installedApp = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
@@ -328,15 +326,15 @@ private extension SettingsViewController
         case .credits:
             settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("CREDITS", comment: "")
             
-        case .macDirtyCow:
-            if isHeader
-            {
-                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("MACDIRTYCOW", comment: "")
-            }
-            else
-            {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("If you've removed the 3-sideloaded app limit via the MacDirtyCow exploit, disable this setting to sideload more than 3 apps at a time.", comment: "")
-            }
+        // case .macDirtyCow:
+        //     if isHeader
+        //     {
+        //         settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("MACDIRTYCOW", comment: "")
+        //     }
+        //     else
+        //     {
+        //         settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("If you've removed the 3-sideloaded app limit via the MacDirtyCow exploit, disable this setting to sideload more than 3 apps at a time.", comment: "")
+        //     }
             
         case .debug:
             settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("DEBUG", comment: "")
@@ -359,9 +357,9 @@ private extension SettingsViewController
     {
         switch section
         {
-        case .macDirtyCow:
-            let isHidden = !(UserDefaults.standard.isCowExploitSupported && UserDefaults.standard.isDebugModeEnabled)
-            return isHidden
+        // case .macDirtyCow:
+        //     let isHidden = !(UserDefaults.standard.isCowExploitSupported && UserDefaults.standard.isDebugModeEnabled)
+        //     return isHidden
             
         default: return false
         }
@@ -655,7 +653,8 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
         case .account where self.activeTeam == nil: return nil
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        // case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .debug:
             let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(headerView, for: section, isHeader: true)
             return headerView
@@ -671,7 +670,8 @@ extension SettingsViewController
         {
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
-        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        // case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .techyThings:
             let footerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(footerView, for: section, isHeader: false)
             return footerView
@@ -688,7 +688,8 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        // case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .debug:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: true)
             return height
             
@@ -704,7 +705,8 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0            
-        case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        // case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
+        case .signIn, .patreon, .display, .appRefresh, .techyThings:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: false)
             return height
             
@@ -903,9 +905,6 @@ extension SettingsViewController
                    self.present(alertController, animated: true)
                    self.tableView.deselectRow(at: indexPath, animated: true)
                 }
-
-                
-            case .clearCache: self.clearCache()
                 
             case .resetPairingFile:
                 
@@ -949,11 +948,12 @@ extension SettingsViewController
                 } else {
                     ELOG("UIApplication.openSettingsURLString invalid")
                 }
-            case .refreshAttempts, .errorLog, .responseCaching: break
+            case .refreshAttempts, .responseCaching: break
 
             }
             
-        case .account, .patreon, .display, .instructions, .macDirtyCow: break
+        // case .account, .patreon, .display, .instructions, .macDirtyCow: break
+        case .account, .patreon, .display, .instructions: break
         }
     }
 }
