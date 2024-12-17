@@ -89,15 +89,22 @@ public class InstalledApp: NSManagedObject, InstalledAppProtocol
             return self.version < latestSupportedVersion
         }
         
-        // Check for semantic version updates
-        if currentVersion! < latestVersion! {
+        let isBeta = storeApp.isBeta
+        
+        // compare semantic version updates
+        //   - for stable releases "beta" shouldn't be true
+        if !isBeta && (currentVersion! < latestVersion!) {
             return true
         }
         
         if UserDefaults.standard.isBetaUpdatesEnabled {
+            // NOTE: beta builds will always need commit ID suffix
+            //       so it doesn't matter if semantic version was bumped, because commit ID won't be same
+            //       and we will accept this update
+            
             // storeApp.commitID is set in sources.json deployed at apps.json for the respective source
             let commitID = storeApp.commitID ?? ""
-            if(storeApp.isBeta && !commitID.isEmpty){
+            if(isBeta && !commitID.isEmpty){
                 let SHORT_COMMIT_LEN        = 7
                 let isCommitIDValid         = (commitID.count == SHORT_COMMIT_LEN)
                 let installedAppCommitID    = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? ""
