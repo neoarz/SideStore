@@ -77,18 +77,36 @@ public class InstalledApp: NSManagedObject, InstalledAppProtocol
     }
     
     @objc public var hasUpdate: Bool {
-        if self.storeApp == nil { return false }
-        if self.storeApp!.latestSupportedVersion == nil { return false }
+        guard let storeApp = self.storeApp,
+              let latestSupportedVersion = storeApp.latestSupportedVersion?.version else {
+            return false
+        }
 
         let currentVersion = SemanticVersion(self.version)
-        let latestVersion = SemanticVersion(self.storeApp!.latestSupportedVersion!.version)
+        let latestVersion = SemanticVersion(latestSupportedVersion)
 
         if currentVersion == nil || latestVersion == nil {
-            // One of the versions is not valid SemVer, fall back to comparing the version strings by character
-            return self.version < self.storeApp!.latestSupportedVersion!.version
+            return self.version < latestSupportedVersion
         }
         
-        return currentVersion! < latestVersion!
+        // Check for semantic version updates
+        if currentVersion! < latestVersion! {
+            return true
+        }
+        
+        if UserDefaults.standard.isBetaUpdatesEnabled {
+            // storeApp.commitID is set in sources.json deployed at apps.json for the respective source
+            let commitID = storeApp.commitID ?? ""
+            if(storeApp.isBeta && !commitID.isEmpty){
+                let SHORT_COMMIT_LEN        = 8
+                let isCommitIDValid         = (commitID.count == SHORT_COMMIT_LEN)
+                let installedAppCommitID    = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? ""
+//                let isBetaUpdateAvailable   = (installedAppCommitID.count == commitID.count) &&
+                let isBetaUpdateAvailable   = (installedAppCommitID != commitID)
+                return isCommitIDValid && isBetaUpdateAvailable
+            }
+        }
+        return false
     }
     
     public var appIDCount: Int {
