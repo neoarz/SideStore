@@ -98,7 +98,7 @@ public class InstalledApp: NSManagedObject, InstalledAppProtocol
             // storeApp.commitID is set in sources.json deployed at apps.json for the respective source
             let commitID = storeApp.commitID ?? ""
             if(storeApp.isBeta && !commitID.isEmpty){
-                let SHORT_COMMIT_LEN        = 8
+                let SHORT_COMMIT_LEN        = 7
                 let isCommitIDValid         = (commitID.count == SHORT_COMMIT_LEN)
                 let installedAppCommitID    = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? ""
 //                let isBetaUpdateAvailable   = (installedAppCommitID.count == commitID.count) &&
