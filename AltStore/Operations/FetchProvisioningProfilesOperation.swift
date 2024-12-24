@@ -363,7 +363,7 @@ extension FetchProvisioningProfilesOperation
             }
         }
         
-        appID.
+        appID.entitlements = entitlements
         
         if updateFeatures || true
         {
