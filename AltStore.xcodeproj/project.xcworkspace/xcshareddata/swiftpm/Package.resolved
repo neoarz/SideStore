@@ -6,8 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SideStore/AltSign",
       "state" : {
-        "branch" : "master",
-        "revision" : "68c82b3b9ea05a2fbc08b3df8d3126f75252eb93"
+        "revision" : "4323ff794e600ce1759cb6ea57275e13b7ea72f2"
       }
     },
     {
