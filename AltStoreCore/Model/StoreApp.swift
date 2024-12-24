@@ -240,7 +240,7 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
             self.iconURL = try container.decode(URL.self, forKey: .iconURL)
             self.screenshotURLs = try container.decodeIfPresent([URL].self, forKey: .screenshotURLs) ?? []
             
-            let downloadURL = try container.decodeIfPresent(URL.self, forKey: .downloadURL)
+            var downloadURL = try container.decodeIfPresent(URL.self, forKey: .downloadURL)
             let platformURLs = try container.decodeIfPresent(PlatformURLs.self.self, forKey: .platformURLs)
             if let platformURLs = platformURLs {
                 self.platformURLs = platformURLs
@@ -255,7 +255,7 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
             } else if let downloadURL = downloadURL {
                 self._downloadURL = downloadURL
             } else {
-                if let version = try container.decode(String.self, forKey: .version){
+                let version = try container.decode(String.self, forKey: .version)
                     if let versions = try container.decodeIfPresent([AppVersion].self, forKey: .versions){
                         for ver in versions {
                             if ver.version == version {
@@ -268,9 +268,9 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
                         throw DecodingError.dataCorruptedError(forKey: .downloadURL, in: container, debugDescription: "E downloadURL:String or downloadURLs:[[Platform:URL]] key required.")
                     }
                     
-                } else {
-                throw DecodingError.dataCorruptedError(forKey: .downloadURL, in: container, debugDescription: "E downloadURL:String or downloadURLs:[[Platform:URL]] key required.")
-                }
+//                 else {
+//                throw DecodingError.dataCorruptedError(forKey: .downloadURL, in: container, debugDescription: "E downloadURL:String or downloadURLs:[[Platform:URL]] key required.")
+//                }
             }
             
             if let tintColorHex = try container.decodeIfPresent(String.self, forKey: .tintColor)
