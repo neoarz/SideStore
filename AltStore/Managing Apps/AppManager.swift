@@ -1141,7 +1141,7 @@ private extension AppManager
         }
     }
     
-    private func _install(_ app: AppProtocol, operation appOperation: AppOperation, group: RefreshGroup, context: InstallAppOperationContext? = nil, additionalEntitlements: [ALTEntitlement: Any] = [.increasedDebuggingMemoryLimit: ALTEntitlement.increasedDebuggingMemoryLimit], cacheApp: Bool = true, completionHandler: @escaping (Result<InstalledApp, Error>) -> Void) -> Progress
+    private func _install(_ app: AppProtocol, operation appOperation: AppOperation, group: RefreshGroup, context: InstallAppOperationContext? = nil, additionalEntitlements: [ALTEntitlement: Any] = [.increasedDebuggingMemoryLimit: ALTEntitlement.increasedDebuggingMemoryLimit, .increasedMemoryLimit: ALTEntitlement.increasedMemoryLimit], cacheApp: Bool = true, completionHandler: @escaping (Result<InstalledApp, Error>) -> Void) -> Progress
     {
         let progress = Progress.discreteProgress(totalUnitCount: 100)
         
