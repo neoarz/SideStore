@@ -363,7 +363,9 @@ extension FetchProvisioningProfilesOperation
             }
         }
         
-        if updateFeatures
+        appID.
+        
+        if updateFeatures || true
         {
             let appID = appID.copy() as! ALTAppID
             appID.features = features
