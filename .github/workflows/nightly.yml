@@ -53,6 +53,9 @@ jobs:
         with:
           key: xcode-cache-deriveddata-${{ github.sha }}
           restore-keys: xcode-cache-deriveddata-
+          swiftpm-cache-key: xcode-cache-sourcedata-${{ github.sha }}
+          swiftpm-cache-restore-keys: |
+            xcode-cache-sourcedata-
 
       - name: Build SideStore
         run: make build | xcpretty && exit ${PIPESTATUS[0]}
