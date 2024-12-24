@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: brew install ldid
 
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
       - name: Cache .nightly-build-num
         uses: actions/cache@v4
         with:
@@ -58,7 +61,7 @@ jobs:
             xcode-cache-sourcedata-
 
       - name: Build SideStore
-        run: make build | xcpretty && exit ${PIPESTATUS[0]}
+        run: NSUnbufferedIO=YES make build 2>&1 | xcbeautify && exit ${PIPESTATUS[0]}
 
       - name: Fakesign app
         run: make fakesign
