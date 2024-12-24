@@ -299,6 +299,19 @@ extension FetchProvisioningProfilesOperation
                                 }
                             }
                         }
+                        catch ALTAppleAPIError.bundleIdentifierUnavailable {
+                            ALTAppleAPI.shared.fetchAppIDs(for: team, session: session) {res, err in
+                                if let err = err {
+                                    return completionHandler(.failure(err))
+                                }
+                                guard let res = res else {return completionHandler(.failure(ALTError(.unknown)))}
+                                for appid in res {
+                                    if appid.bundleIdentifier == bundleIdentifier {
+                                        completionHandler(.success(appid))
+                                    }
+                                }
+                            }
+                        }
                         catch
                         {
                             completionHandler(.failure(error))
