@@ -41,8 +41,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private let intentHandler = IntentHandler()
     private let viewAppIntentHandler = ViewAppIntentHandler()
     
+    public let consoleLog = ConsoleLog()
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
+        
+        // start logging to console immediately on startup
+        consoleLog.startCapturing()
+        
         // Override point for customization after application launch.
 //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.MigrationDebug")
 //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.SQLDebug")
@@ -129,6 +135,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         case is ViewAppIntent: return self.viewAppIntentHandler
         default: return nil
         }
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        // Stop console logging and clean up resources
+        consoleLog.stopCapturing()
     }
 }
 

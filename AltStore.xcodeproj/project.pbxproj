@@ -61,6 +61,12 @@
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
 		A8BB34E52D04EC8E000A8B4D /* minimuxer-helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A52D04DA1900F0F0F3 /* minimuxer-helpers.swift */; };
+		A8C38C242D206A3A00E83DBD /* ConsoleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */; };
+		A8C38C262D206A3A00E83DBD /* ConsoleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C1E2D206A3A00E83DBD /* ConsoleLog.swift */; };
+		A8C38C2A2D206AC100E83DBD /* OutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C282D206AC100E83DBD /* OutputStream.swift */; };
+		A8C38C2C2D206AD900E83DBD /* AbstractClassError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C2B2D206AD900E83DBD /* AbstractClassError.swift */; };
+		A8C38C322D206B2500E83DBD /* FileOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C312D206B2500E83DBD /* FileOutputStream.swift */; };
+		A8C38C382D2084D000E83DBD /* ConsoleLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C372D2084D000E83DBD /* ConsoleLogView.swift */; };
 		A8C6D50C2D1EE87600DF01F1 /* AltSign-Static in Frameworks */ = {isa = PBXBuildFile; productRef = A8C6D50B2D1EE87600DF01F1 /* AltSign-Static */; };
 		A8C6D5122D1EE8AF00DF01F1 /* AltSign-Static in Frameworks */ = {isa = PBXBuildFile; productRef = A8C6D5112D1EE8AF00DF01F1 /* AltSign-Static */; };
 		A8C6D5132D1EE8D700DF01F1 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; };
@@ -624,6 +630,12 @@
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogger.swift; sourceTree = "<group>"; };
+		A8C38C1E2D206A3A00E83DBD /* ConsoleLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLog.swift; sourceTree = "<group>"; };
+		A8C38C282D206AC100E83DBD /* OutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputStream.swift; sourceTree = "<group>"; };
+		A8C38C2B2D206AD900E83DBD /* AbstractClassError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbstractClassError.swift; sourceTree = "<group>"; };
+		A8C38C312D206B2500E83DBD /* FileOutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOutputStream.swift; sourceTree = "<group>"; };
+		A8C38C372D2084D000E83DBD /* ConsoleLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogView.swift; sourceTree = "<group>"; };
 		A8D484D72D0CD306002C691D /* AltBackup.ipa */ = {isa = PBXFileReference; lastKnownFileType = file; path = AltBackup.ipa; sourceTree = "<group>"; };
 		A8F66C3C2D04D433009689E6 /* em_proxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = em_proxy.h; sourceTree = "<group>"; };
 		A8F66C602D04D464009689E6 /* minimuxer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = minimuxer.xcodeproj; sourceTree = "<group>"; };
@@ -1161,6 +1173,34 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A8C38C1C2D2068D100E83DBD /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				A8C38C272D206AA500E83DBD /* common */,
+				A8C38C202D206A3A00E83DBD /* iostreams */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		A8C38C202D206A3A00E83DBD /* iostreams */ = {
+			isa = PBXGroup;
+			children = (
+				A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */,
+				A8C38C1E2D206A3A00E83DBD /* ConsoleLog.swift */,
+			);
+			path = iostreams;
+			sourceTree = "<group>";
+		};
+		A8C38C272D206AA500E83DBD /* common */ = {
+			isa = PBXGroup;
+			children = (
+				A8C38C282D206AC100E83DBD /* OutputStream.swift */,
+				A8C38C312D206B2500E83DBD /* FileOutputStream.swift */,
+				A8C38C2B2D206AD900E83DBD /* AbstractClassError.swift */,
+			);
+			path = common;
+			sourceTree = "<group>";
+		};
 		A8F66C072D04C025009689E6 /* SideStore */ = {
 			isa = PBXGroup;
 			children = (
@@ -1170,6 +1210,7 @@
 				B343F84D295F6323002B1159 /* em_proxy.xcodeproj */,
 				19104DB32909C06D00C49C7B /* EmotionalDamage */,
 				B343F886295F7F9B002B1159 /* libfragmentzip.xcodeproj */,
+				A8C38C1C2D2068D100E83DBD /* Utils */,
 			);
 			path = SideStore;
 			sourceTree = "<group>";
@@ -2095,6 +2136,7 @@
 		D589170128C7D93500E39C8B /* Error Log */ = {
 			isa = PBXGroup;
 			children = (
+				A8C38C372D2084D000E83DBD /* ConsoleLogView.swift */,
 				D57FE84328C7DB7100216002 /* ErrorLogViewController.swift */,
 				D54DED1328CBC44B008B27A0 /* ErrorLogTableViewCell.swift */,
 				0EE7FDCC2BE9124400D1E390 /* ErrorDetailsViewController.swift */,
@@ -2838,6 +2880,7 @@
 			files = (
 				BFDB6A0F22AB2776007EA6D6 /* SendAppOperation.swift in Sources */,
 				BFDB6A0D22AAFC1A007EA6D6 /* OperationError.swift in Sources */,
+				A8C38C2C2D206AD900E83DBD /* AbstractClassError.swift in Sources */,
 				BF74989B23621C0700CED65F /* ForwardingNavigationController.swift in Sources */,
 				D57F2C9426E01BC700B9FA39 /* UIDevice+Vibration.swift in Sources */,
 				BFD2478F2284C8F900981D42 /* Button.swift in Sources */,
@@ -2865,11 +2908,14 @@
 				BFCCB51A245E3401001853EA /* VerifyAppOperation.swift in Sources */,
 				BFF0B6982322CAB8007A79E1 /* InstructionsViewController.swift in Sources */,
 				BF9ABA4522DCFF43008935CF /* BrowseViewController.swift in Sources */,
+				A8C38C242D206A3A00E83DBD /* ConsoleLogger.swift in Sources */,
+				A8C38C262D206A3A00E83DBD /* ConsoleLog.swift in Sources */,
 				D5935AED29C39DE300C157EF /* SourceComponents.swift in Sources */,
 				D5935AED29C39DE300C157EF /* SourceComponents.swift in Sources */,
 				A8FD917C2D0478D200322782 /* VerificationError.swift in Sources */,
 				D5A0537329B91DB400997551 /* SourceDetailContentViewController.swift in Sources */,
 				BF770E5422BC044E002A40FE /* OperationContexts.swift in Sources */,
+				A8C38C322D206B2500E83DBD /* FileOutputStream.swift in Sources */,
 				BFD2478C2284C4C300981D42 /* AppIconImageView.swift in Sources */,
 				BF8F69C422E662D300049BA1 /* AppViewController.swift in Sources */,
 				BFF0B68E23219520007A79E1 /* PatreonViewController.swift in Sources */,
@@ -2929,12 +2975,14 @@
 				BF9ABA4B22DD1380008935CF /* NavigationBar.swift in Sources */,
 				A8FD917B2D0472DD00322782 /* DeprecatedAPIs.swift in Sources */,
 				BF6C8FAC242935ED00125131 /* NSAttributedString+Markdown.m in Sources */,
+				A8C38C382D2084D000E83DBD /* ConsoleLogView.swift in Sources */,
 				BFF00D322501BDA100746320 /* BackgroundRefreshAppsOperation.swift in Sources */,
 				BF0C4EBD22A1BD8B009A2DD7 /* AppManager.swift in Sources */,
 				BF2901312318F7A800D88A45 /* AppBannerView.swift in Sources */,
 				0EE7FDC42BE8BC7900D1E390 /* ALTLocalizedError.swift in Sources */,
 				BFF00D342501BDCF00746320 /* IntentHandler.swift in Sources */,
 				BFDBBD80246CB84F004ED2F3 /* RemoveAppBackupOperation.swift in Sources */,
+				A8C38C2A2D206AC100E83DBD /* OutputStream.swift in Sources */,
 				BFF0B6942321CB85007A79E1 /* AuthenticationViewController.swift in Sources */,
 				0EE7FDCD2BE9124400D1E390 /* ErrorDetailsViewController.swift in Sources */,
 				D561AF822B21669400BF59C6 /* VerifyAppPledgeOperation.swift in Sources */,
