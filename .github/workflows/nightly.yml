@@ -21,7 +21,9 @@ jobs:
     steps:
 
       - name: Set current build as BETA
-        run: echo "IS_BETA=1" >> $GITHUB_ENV
+        run: |
+          echo "IS_BETA=1" >> $GITHUB_ENV
+          echo "RELEASE_CHANNEL=beta" >> $GITHUB_ENV
         
       - name: Checkout code
         uses: actions/checkout@v4
@@ -242,7 +244,6 @@ jobs:
         run: |
           echo "VERSION_IPA=$VERSION_IPA" >> $GITHUB_ENV
           echo "VERSION_DATE=$FORMATTED_DATE" >> $GITHUB_ENV
-          echo "BETA=true" >> $GITHUB_ENV
           echo "COMMIT_ID=$SHORT_COMMIT" >> $GITHUB_ENV
           echo "SIZE=$IPA_SIZE" >> $GITHUB_ENV
           echo "SHA256=$SHA256_HASH" >> $GITHUB_ENV
@@ -269,8 +270,8 @@ jobs:
           pushd SideStore/apps-v2.json/
   
           # Configure Git user (committer details)
-          # git config user.name "GitHub Actions"
-          # git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
           
           # update the source.json
           python3 ../../update_apps.py "./_includes/source.json"
