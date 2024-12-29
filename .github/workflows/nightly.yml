@@ -281,5 +281,5 @@ jobs:
           git commit -m " - updated for $SHORT_COMMIT deployment" || echo "No changes to commit"
 
           git status
-          git push origin HEAD:nightly
+          git push origin HEAD:main
           popd
