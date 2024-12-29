@@ -249,37 +249,36 @@ jobs:
           echo "LOCALIZED_DESCRIPTION=This is nightly release for revision: ${{ github.sha }}" >> $GITHUB_ENV
           echo "DOWNLOAD_URL=https://github.com/SideStore/SideStore/releases/download/nightly/SideStore.ipa" >> $GITHUB_ENV
 
-      # - name: Checkout SideStore/apps-v2.json
-      #   if: ${{ steps.check_publish.outcome == 'success' }}
-      #   uses: actions/checkout@v4
-      #   with:
-      #       # Repository name with owner. For example, actions/checkout
-      #       # Default: ${{ github.repository }}
-      #       repository: 'SideStore/apps-v2.json'
-      #       # ref: 'main' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
-      #       ref: 'nightly' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
-      #       # token: ${{ github.token }}
-      #       token: ${{ secrets.APPS_DEPLOY_KEY }}
-      #       path: 'SideStore/apps-v2.json'
+      - name: Checkout SideStore/apps-v2.json
+        if: ${{ steps.check_publish.outcome == 'success' }}
+        uses: actions/checkout@v4
+        with:
+            # Repository name with owner. For example, actions/checkout
+            # Default: ${{ github.repository }}
+            repository: 'SideStore/apps-v2.json'
+            # ref: 'main' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
+            ref: 'nightly' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
+            # token: ${{ github.token }}
+            token: ${{ secrets.APPS_DEPLOY_KEY }}
+            path: 'SideStore/apps-v2.json'
       
-      # - name: Publish to SideStore/apps-v2.json
-      #   if: ${{ steps.check_publish.outcome == 'success' }}
-      #   run: |
-      #     # Copy and execute the update script
-      #     pushd SideStore/apps-v2.json/
+      - name: Publish to SideStore/apps-v2.json
+        if: ${{ steps.check_publish.outcome == 'success' }}
+        run: |
+          # Copy and execute the update script
+          pushd SideStore/apps-v2.json/
   
-      #     # Configure Git user (committer details)
-      #     git config user.name "GitHub Actions"
-      #     git config user.email "github-actions@github.com"
+          # Configure Git user (committer details)
+          # git config user.name "GitHub Actions"
+          # git config user.email "github-actions@github.com"
           
-      #     # Make the update script executable and run it
-      #     python3 ../../update_apps.py "./_includes/source.json"
+          # update the source.json
+          python3 ../../update_apps.py "./_includes/source.json"
           
-      #     # Commit changes and push using SSH
-      #     git add ./_includes/source.json
-      #     git commit -m " - updated for $SHORT_COMMIT deployment" || echo "No changes to commit"
+          # Commit changes and push using SSH
+          git add ./_includes/source.json
+          git commit -m " - updated for $SHORT_COMMIT deployment" || echo "No changes to commit"
 
-      #     git status
-      #     # git push origin HEAD:main
-      #     git push origin HEAD:nightly
-      #     popd
+          git status
+          git push origin HEAD:nightly
+          popd
