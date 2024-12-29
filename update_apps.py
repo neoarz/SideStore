@@ -4,6 +4,8 @@ import os
 import json
 import sys
 
+SIDESTORE_BUNDLE_ID = "com.SideStore.SideStore"
+
 # Set environment variables with default values
 VERSION_IPA = os.getenv("VERSION_IPA")
 VERSION_DATE = os.getenv("VERSION_DATE")
@@ -13,7 +15,7 @@ SIZE = os.getenv("SIZE")
 SHA256 = os.getenv("SHA256")
 LOCALIZED_DESCRIPTION = os.getenv("LOCALIZED_DESCRIPTION")
 DOWNLOAD_URL = os.getenv("DOWNLOAD_URL")
-BUNDLE_IDENTIFIER = os.getenv("BUNDLE_IDENTIFIER")
+BUNDLE_IDENTIFIER = os.getenv("BUNDLE_IDENTIFIER", SIDESTORE_BUNDLE_ID)
 
 # Uncomment to debug/test by simulating dummy input locally
 # VERSION_IPA = os.getenv("VERSION_IPA", "0.0.0")
@@ -24,7 +26,6 @@ BUNDLE_IDENTIFIER = os.getenv("BUNDLE_IDENTIFIER")
 # SHA256 = os.getenv("SHA256", "")
 # LOCALIZED_DESCRIPTION = os.getenv("LOCALIZED_DESCRIPTION", "Invalid Update")
 # DOWNLOAD_URL = os.getenv("DOWNLOAD_URL", "https://github.com/SideStore/SideStore/releases/download/0.0.0/SideStore.ipa")
-# BUNDLE_IDENTIFIER = os.getenv("BUNDLE_IDENTIFIER", "com.SideStore.SideStore")
 
 # Check if input file is provided
 if len(sys.argv) < 2:
