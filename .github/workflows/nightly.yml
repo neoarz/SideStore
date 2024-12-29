@@ -257,8 +257,8 @@ jobs:
             # Repository name with owner. For example, actions/checkout
             # Default: ${{ github.repository }}
             repository: 'SideStore/apps-v2.json'
-            # ref: 'main' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
-            ref: 'nightly' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
+            ref: 'main' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
+            # ref: 'nightly' # TODO: use branches for alpha and beta tracks? so as to avoid push collision?
             # token: ${{ github.token }}
             token: ${{ secrets.APPS_DEPLOY_KEY }}
             path: 'SideStore/apps-v2.json'
