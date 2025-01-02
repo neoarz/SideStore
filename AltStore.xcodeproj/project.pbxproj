@@ -1177,12 +1177,12 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A8B516DE2D2666900047047C /* debug */ = {
+		A8B516DE2D2666900047047C /* dignostics */ = {
 			isa = PBXGroup;
 			children = (
 				A8B516DF2D2666A00047047C /* database */,
 			);
-			path = debug;
+			path = dignostics;
 			sourceTree = "<group>";
 		};
 		A8B516DF2D2666A00047047C /* database */ = {
@@ -1196,7 +1196,7 @@
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				A8B516DE2D2666900047047C /* debug */,
+				A8B516DE2D2666900047047C /* dignostics */,
 				A8C38C272D206AA500E83DBD /* common */,
 				A8C38C202D206A3A00E83DBD /* iostreams */,
 			);
