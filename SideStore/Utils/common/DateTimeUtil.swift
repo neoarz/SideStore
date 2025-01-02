@@ -11,7 +11,8 @@ import Foundation
 public class DateTimeUtil {
     public static func getDateInTimeStamp(date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd_HHmmss" // Format: 20241228_142345
+        // (upto millis accurate for uniqueness)
+        formatter.dateFormat = "yyyyMMdd_HHmmss_SSS" // Format: 20241228_142345_300
         // Ensures 24-hour clock format coz the locale value overrides it if it is of AM/PM format?! (why apple!)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter.string(from: date)
