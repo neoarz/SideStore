@@ -74,6 +74,7 @@ extension SettingsViewController
         case responseCaching
         case betaUpdates
         case exportResignedApp
+        case verboseOperationsLogging
         case exportSqliteDB
 //        case advancedSettings
     }
@@ -95,8 +96,9 @@ final class SettingsViewController: UITableViewController
     @IBOutlet private var backgroundRefreshSwitch: UISwitch!
     @IBOutlet private var noIdleTimeoutSwitch: UISwitch!
     @IBOutlet private var disableAppLimitSwitch: UISwitch!
-    @IBOutlet private var isBetaUpdatesEnabled: UISwitch!
-    @IBOutlet private var isResignedAppExportEnabled: UISwitch!
+    @IBOutlet private var betaUpdatesSwitch: UISwitch!
+    @IBOutlet private var exportResignedAppsSwitch: UISwitch!
+    @IBOutlet private var verboseOperationsLoggingSwitch: UISwitch!
     
     @IBOutlet private var refreshSideJITServer: UILabel!
     @IBOutlet private var disableResponseCachingSwitch: UISwitch!
@@ -255,8 +257,9 @@ private extension SettingsViewController
         self.noIdleTimeoutSwitch.isOn = UserDefaults.standard.isIdleTimeoutDisableEnabled
         self.disableAppLimitSwitch.isOn = UserDefaults.standard.isAppLimitDisabled
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
-        self.isBetaUpdatesEnabled.isOn = UserDefaults.standard.isBetaUpdatesEnabled
-        self.isResignedAppExportEnabled.isOn = UserDefaults.standard.isExportResignedAppEnabled
+        self.betaUpdatesSwitch.isOn = UserDefaults.standard.isBetaUpdatesEnabled
+        self.exportResignedAppsSwitch.isOn = UserDefaults.standard.isExportResignedAppEnabled
+        self.verboseOperationsLoggingSwitch.isOn = UserDefaults.standard.isVerboseOperationsLoggingEnabled
 
         if self.isViewLoaded
         {
@@ -438,6 +441,11 @@ private extension SettingsViewController
     @IBAction func toggleResignedAppExport(_ sender: UISwitch) {
         // update it in database
         UserDefaults.standard.isExportResignedAppEnabled = sender.isOn
+    }
+
+    @IBAction func toggleVerboseOperationsLogging(_ sender: UISwitch) {
+        // update it in database
+        UserDefaults.standard.isVerboseOperationsLoggingEnabled = sender.isOn
     }
 
     @IBAction func toggleEnableBetaUpdates(_ sender: UISwitch) {
@@ -1032,7 +1040,7 @@ extension SettingsViewController
 //                } else {
 //                    ELOG("UIApplication.openSettingsURLString invalid")
 //                }
-            case .refreshAttempts, .responseCaching, .betaUpdates, .exportResignedApp : break
+            case .refreshAttempts, .responseCaching, .betaUpdates, .exportResignedApp, .verboseOperationsLogging : break
 
             }
             

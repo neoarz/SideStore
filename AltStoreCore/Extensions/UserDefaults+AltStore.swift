@@ -34,6 +34,7 @@ public extension UserDefaults
     @NSManaged var isAppLimitDisabled: Bool
     @NSManaged var isBetaUpdatesEnabled: Bool
     @NSManaged var isExportResignedAppEnabled: Bool
+    @NSManaged var isVerboseOperationsLoggingEnabled: Bool
     @NSManaged var isPairingReset: Bool
     @NSManaged var isDebugModeEnabled: Bool
     @NSManaged var presentedLaunchReminderNotification: Bool
@@ -120,6 +121,7 @@ public extension UserDefaults
             #keyPath(UserDefaults.isAppLimitDisabled): false,
             #keyPath(UserDefaults.isBetaUpdatesEnabled): false,
             #keyPath(UserDefaults.isExportResignedAppEnabled): false,
+            #keyPath(UserDefaults.isVerboseOperationsLoggingEnabled): false,
             #keyPath(UserDefaults.isBackgroundRefreshEnabled): true,
             #keyPath(UserDefaults.isIdleTimeoutDisableEnabled): true,
             #keyPath(UserDefaults.isPairingReset): true,
