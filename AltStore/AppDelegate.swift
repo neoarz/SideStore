@@ -45,7 +45,21 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
+        // navigation bar buttons spacing is too much (so hack it to use minimal spacing)
+        // this is swift-5 specific behavior and might change
+        // https://stackoverflow.com/a/64988363/11971304
+        //
+        // Warning: this affects all screens through out the app, and basically overrides storyboard
+        let stackViewAppearance = UIStackView.appearance(whenContainedInInstancesOf: [UINavigationBar.self])
+        stackViewAppearance.spacing = -8        // adjust as needed
         
+        
+        // TODO: @mahee96: the capture is started, but when application sleeps/pushed to bg
+        //                 terminate might be called even if the application is not really closed?
+        //                 so the log gets rotated making write to a new log on wake up here
+        //                 thereby splitting the logs of current session into multiple ones
+        //
+        //                 Fix this later!
         // start logging to console immediately on startup
         consoleLog.startCapturing()
         
