@@ -38,10 +38,14 @@ class ConsoleLog {
     public lazy var logFileURL: URL = {
         // get current timestamp
         let currentTime = Date()
-        let dateTimeStamp = ConsoleLog.getDateInTimeStamp(date: currentTime)
+        let dateTimeStamp = DateTimeUtil.getDateInTimeStamp(date: currentTime)
         
         // create a log file with the current timestamp
-        let logName = "\(ConsoleLog.CONSOLE_LOG_NAME_PREFIX)-\(dateTimeStamp)\(ConsoleLog.CONSOLE_LOG_EXTN)"
+        let logName = DateTimeUtil.getTimeStampSuffixedFileName(
+            fileName: ConsoleLog.CONSOLE_LOG_NAME_PREFIX,
+            timestamp: dateTimeStamp,
+            extn: ConsoleLog.CONSOLE_LOG_EXTN
+        )
         let logFileURL = consoleLogsDir.appendingPathComponent(logName)
         return logFileURL
     }()
@@ -54,12 +58,6 @@ class ConsoleLog {
         
         // return the file handle
         return try! FileHandle(forWritingTo: logFileURL)
-    }
-    
-    private static func getDateInTimeStamp(date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd_HHmmss" // Format: 20241228_142345
-        return formatter.string(from: date)
     }
     
     func startCapturing() {

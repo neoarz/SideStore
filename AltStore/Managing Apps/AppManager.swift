@@ -1763,7 +1763,7 @@ private extension AppManager
     private func exportResginedAppsToDocsDir(_ resignedApp: ALTApplication)
     {
         // Check if the user has enabled exporting resigned apps to the Documents directory and continue
-        guard UserDefaults.standard.isResignedAppExportEnabled else {
+        guard UserDefaults.standard.isExportResignedAppEnabled else {
             return
         }
         

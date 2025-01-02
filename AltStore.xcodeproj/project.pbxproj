@@ -60,6 +60,8 @@
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
+		A8B516E32D2666CA0047047C /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E22D2666CA0047047C /* CoreDataHelper.swift */; };
+		A8B516E62D2668170047047C /* DateTimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E52D2668020047047C /* DateTimeUtil.swift */; };
 		A8BB34E52D04EC8E000A8B4D /* minimuxer-helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A52D04DA1900F0F0F3 /* minimuxer-helpers.swift */; };
 		A8C38C242D206A3A00E83DBD /* ConsoleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */; };
 		A8C38C262D206A3A00E83DBD /* ConsoleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C38C1E2D206A3A00E83DBD /* ConsoleLog.swift */; };
@@ -630,6 +632,8 @@
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A8B516E22D2666CA0047047C /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
+		A8B516E52D2668020047047C /* DateTimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeUtil.swift; sourceTree = "<group>"; };
 		A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogger.swift; sourceTree = "<group>"; };
 		A8C38C1E2D206A3A00E83DBD /* ConsoleLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLog.swift; sourceTree = "<group>"; };
 		A8C38C282D206AC100E83DBD /* OutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputStream.swift; sourceTree = "<group>"; };
@@ -1173,9 +1177,26 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A8B516DE2D2666900047047C /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				A8B516DF2D2666A00047047C /* database */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
+		A8B516DF2D2666A00047047C /* database */ = {
+			isa = PBXGroup;
+			children = (
+				A8B516E22D2666CA0047047C /* CoreDataHelper.swift */,
+			);
+			path = database;
+			sourceTree = "<group>";
+		};
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A8B516DE2D2666900047047C /* debug */,
 				A8C38C272D206AA500E83DBD /* common */,
 				A8C38C202D206A3A00E83DBD /* iostreams */,
 			);
@@ -1194,6 +1215,7 @@
 		A8C38C272D206AA500E83DBD /* common */ = {
 			isa = PBXGroup;
 			children = (
+				A8B516E52D2668020047047C /* DateTimeUtil.swift */,
 				A8C38C282D206AC100E83DBD /* OutputStream.swift */,
 				A8C38C312D206B2500E83DBD /* FileOutputStream.swift */,
 				A8C38C2B2D206AD900E83DBD /* AbstractClassError.swift */,
@@ -2912,6 +2934,7 @@
 				A8C38C262D206A3A00E83DBD /* ConsoleLog.swift in Sources */,
 				D5935AED29C39DE300C157EF /* SourceComponents.swift in Sources */,
 				D5935AED29C39DE300C157EF /* SourceComponents.swift in Sources */,
+				A8B516E62D2668170047047C /* DateTimeUtil.swift in Sources */,
 				A8FD917C2D0478D200322782 /* VerificationError.swift in Sources */,
 				D5A0537329B91DB400997551 /* SourceDetailContentViewController.swift in Sources */,
 				BF770E5422BC044E002A40FE /* OperationContexts.swift in Sources */,
@@ -2986,6 +3009,7 @@
 				BFF0B6942321CB85007A79E1 /* AuthenticationViewController.swift in Sources */,
 				0EE7FDCD2BE9124400D1E390 /* ErrorDetailsViewController.swift in Sources */,
 				D561AF822B21669400BF59C6 /* VerifyAppPledgeOperation.swift in Sources */,
+				A8B516E32D2666CA0047047C /* CoreDataHelper.swift in Sources */,
 				BF3432FB246B894F0052F4A1 /* BackupAppOperation.swift in Sources */,
 				BF9ABA4922DD0742008935CF /* ScreenshotCollectionViewCell.swift in Sources */,
 				BF9ABA4D22DD16DE008935CF /* PillButton.swift in Sources */,

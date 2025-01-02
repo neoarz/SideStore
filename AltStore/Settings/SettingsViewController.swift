@@ -73,7 +73,8 @@ extension SettingsViewController
         case anisetteServers
         case responseCaching
         case betaUpdates
-        case resignedAppExport
+        case exportResignedApp
+        case exportSqliteDB
 //        case advancedSettings
     }
 }
@@ -110,6 +111,8 @@ final class SettingsViewController: UITableViewController
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
+    
+    private var exportDBInProgress = false
     
     required init?(coder aDecoder: NSCoder)
     {
@@ -253,7 +256,7 @@ private extension SettingsViewController
         self.disableAppLimitSwitch.isOn = UserDefaults.standard.isAppLimitDisabled
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         self.isBetaUpdatesEnabled.isOn = UserDefaults.standard.isBetaUpdatesEnabled
-        self.isResignedAppExportEnabled.isOn = UserDefaults.standard.isResignedAppExportEnabled
+        self.isResignedAppExportEnabled.isOn = UserDefaults.standard.isExportResignedAppEnabled
 
         if self.isViewLoaded
         {
@@ -434,7 +437,7 @@ private extension SettingsViewController
     
     @IBAction func toggleResignedAppExport(_ sender: UISwitch) {
         // update it in database
-        UserDefaults.standard.isResignedAppExportEnabled = sender.isOn
+        UserDefaults.standard.isExportResignedAppEnabled = sender.isOn
     }
 
     @IBAction func toggleEnableBetaUpdates(_ sender: UISwitch) {
@@ -823,11 +826,11 @@ extension SettingsViewController
                         }
 
                        self.present(mailViewController, animated: true, completion: nil)
-                  } else {
+                    } else {
                       let toastView = ToastView(text: NSLocalizedString("Cannot Send Mail", comment: ""), detailText: nil)
                       toastView.show(in: self)
-                }
-            })
+                    }
+                })
                 
                 // Cancel action
                 alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -995,6 +998,32 @@ extension SettingsViewController
 
                 self.prepare(for: UIStoryboardSegue(identifier: "anisetteServers", source: self, destination: anisetteServersController), sender: nil)
                 
+            case .exportSqliteDB:
+                // do not accept simulatenous export requests
+                if !exportDBInProgress {
+                    exportDBInProgress = true
+                    Task{
+                        var toastView: ToastView?
+                        do{
+                            let exportedURL = try await CoreDataHelper.exportCoreDataStore()
+                            print("exportSqliteDB: ExportedURL: \(exportedURL)")
+                            toastView = ToastView(text: "Export Successful", detailText: nil)
+                        }catch{
+                            print("exportSqliteDB: \(error)")
+                            toastView = ToastView(error: error)
+                        }
+                        
+                        // show toast to user about the result
+                        DispatchQueue.main.async {
+                            toastView?.show(in: self)
+                        }
+                        
+                        // update that work has finished
+                        exportDBInProgress = false
+                    }
+                }
+                
+                
 //            case .advancedSettings:
 //                // Create the URL that deep links to your app's custom settings.
 //                if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -1003,7 +1032,7 @@ extension SettingsViewController
 //                } else {
 //                    ELOG("UIApplication.openSettingsURLString invalid")
 //                }
-            case .refreshAttempts, .responseCaching, .betaUpdates, .resignedAppExport : break
+            case .refreshAttempts, .responseCaching, .betaUpdates, .exportResignedApp : break
 
             }
             
