@@ -9,6 +9,7 @@
 
 import Foundation
 import CoreData
+import System
 
 class CoreDataHelper{
     
@@ -54,6 +55,31 @@ class CoreDataHelper{
         }
     }
     
+    private static func lockSQLiteFile(at url: URL) -> FileDescriptor? {
+        // Open the SQLite file for locking
+        let fileDescriptor = open(url.path, O_RDWR)
+        guard fileDescriptor >= 0 else {
+            print("Failed to open SQLite file for locking.")
+            return nil
+        }
+
+        // Lock the file using flock (exclusive lock)
+        let lockResult = flock(fileDescriptor, LOCK_EX)
+        guard lockResult == 0 else {
+            print("Failed to lock SQLite file.")
+            close(fileDescriptor)
+            return nil
+        }
+
+        return FileDescriptor(rawValue: fileDescriptor)
+    }
+
+    private static func unlockSQLiteFile(fileDescriptor: FileDescriptor) {
+        let fileDescriptor = fileDescriptor.rawValue
+        // Unlock the file after backup
+        flock(fileDescriptor, LOCK_UN)
+        close(fileDescriptor)
+    }
     
     private static func getCoreDataError(code: Int, localizedDescription: String) -> Error {
         return NSError(domain: "CoreDataExport", code: code, userInfo: [NSLocalizedDescriptionKey: localizedDescription])
@@ -72,6 +98,19 @@ class CoreDataHelper{
             let errorDescription = "Persistent store URL not found"
             throw getCoreDataError(code: 4, localizedDescription: errorDescription)
         }
+
+        // TODO: we can't lock on the sqlite file for serialization coz coredata might be holding
+        //       active database connection handle to the sqlite
+        
+//        // Lock the SQLite file
+//        guard let fileDescriptor = lockSQLiteFile(at: storeURL) else {
+//            throw getCoreDataError(code: 5, localizedDescription: "Failed to lock SQLite file")
+//        }
+//        
+//        defer {
+//            // Ensure that the file is unlocked when the backup completes or fails
+//            unlockSQLiteFile(fileDescriptor: fileDescriptor)
+//        }
         
         let fileManager = FileManager.default
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -124,7 +163,7 @@ class CoreDataHelper{
             
         } catch {
             let errorDescription = "Failed to copy Core Data files: \(error.localizedDescription)"
-            throw getCoreDataError(code: 5, localizedDescription: errorDescription)
+            throw getCoreDataError(code: 6, localizedDescription: errorDescription)
         }
     }
 }
