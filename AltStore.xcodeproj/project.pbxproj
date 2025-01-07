@@ -50,6 +50,7 @@
 		551A15E55999499418AC1022 /* Pods_AltStoreCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 707E746318F0B6F1A44935D3 /* Pods_AltStoreCore.framework */; };
 		A800F7042CE28E3800208744 /* View+AltWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A800F7032CE28E2F00208744 /* View+AltWidget.swift */; };
 		A805C3CD2D0C316A00E76BDD /* Pods_SideStore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A805C3CC2D0C316A00E76BDD /* Pods_SideStore.framework */; };
+		A8087E752D2D2958002DB21B /* ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8087E742D2D2958002DB21B /* ImportExport.swift */; };
 		A809F69E2D04D7AC00F0F0F3 /* libminimuxer_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A809F68E2D04D71200F0F0F3 /* libminimuxer_static.a */; };
 		A809F69F2D04D7B300F0F0F3 /* libem_proxy_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A809F6942D04D71200F0F0F3 /* libem_proxy_static.a */; };
 		A809F6A82D04DA1900F0F0F3 /* minimuxer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A32D04DA1900F0F0F3 /* minimuxer.swift */; };
@@ -616,6 +617,7 @@
 		7935E4499B2FC11DA8BAB2CC /* Pods-AltStoreCore.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AltStoreCore.release.xcconfig"; path = "Target Support Files/Pods-AltStoreCore/Pods-AltStoreCore.release.xcconfig"; sourceTree = "<group>"; };
 		A800F7032CE28E2F00208744 /* View+AltWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+AltWidget.swift"; sourceTree = "<group>"; };
 		A805C3CC2D0C316A00E76BDD /* Pods_SideStore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_SideStore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A8087E742D2D2958002DB21B /* ImportExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExport.swift; sourceTree = "<group>"; };
 		A809F6A22D04DA1900F0F0F3 /* minimuxer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = minimuxer.h; sourceTree = "<group>"; };
 		A809F6A32D04DA1900F0F0F3 /* minimuxer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = minimuxer.swift; sourceTree = "<group>"; };
 		A809F6A42D04DA1900F0F0F3 /* minimuxer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "minimuxer-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -1134,6 +1136,14 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		A8087E712D2D291B002DB21B /* importexport */ = {
+			isa = PBXGroup;
+			children = (
+				A8087E742D2D2958002DB21B /* ImportExport.swift */,
+			);
+			path = importexport;
+			sourceTree = "<group>";
+		};
 		A809F68A2D04D71200F0F0F3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1196,6 +1206,7 @@
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A8087E712D2D291B002DB21B /* importexport */,
 				A8B516DE2D2666900047047C /* dignostics */,
 				A8C38C272D206AA500E83DBD /* common */,
 				A8C38C202D206A3A00E83DBD /* iostreams */,
@@ -2903,6 +2914,7 @@
 				BFDB6A0F22AB2776007EA6D6 /* SendAppOperation.swift in Sources */,
 				BFDB6A0D22AAFC1A007EA6D6 /* OperationError.swift in Sources */,
 				A8C38C2C2D206AD900E83DBD /* AbstractClassError.swift in Sources */,
+				A8087E752D2D2958002DB21B /* ImportExport.swift in Sources */,
 				BF74989B23621C0700CED65F /* ForwardingNavigationController.swift in Sources */,
 				D57F2C9426E01BC700B9FA39 /* UIDevice+Vibration.swift in Sources */,
 				BFD2478F2284C8F900981D42 /* Button.swift in Sources */,
