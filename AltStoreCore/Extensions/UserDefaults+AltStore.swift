@@ -107,11 +107,11 @@ public extension UserDefaults
         (ProcessInfo.processInfo.isOperatingSystemAtLeast(ios14) && !ProcessInfo.processInfo.isOperatingSystemAtLeast(ios15_7_2)) ||
         (ProcessInfo.processInfo.isOperatingSystemAtLeast(ios16) && !ProcessInfo.processInfo.isOperatingSystemAtLeast(ios16_2))
         
-        #if DEBUG
-        let permissionCheckingDisabled = true
-        #else
+//        #if DEBUG
+//        let permissionCheckingDisabled = true
+//        #else
         let permissionCheckingDisabled = false
-        #endif
+//        #endif
         
         // Pre-iOS 15 doesn't support custom sorting, so default to sorting by name.
         // Otherwise, default to `default` sorting (a.k.a. "source order").

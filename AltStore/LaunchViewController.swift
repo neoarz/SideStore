@@ -318,6 +318,7 @@ extension LaunchViewController
         
         self.updateKnownSources()
         
+        // Ask widgets to be refreshed
         WidgetCenter.shared.reloadAllTimelines()
         
         // Add view controller as child (rather than presenting modally)

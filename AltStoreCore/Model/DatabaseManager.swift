@@ -87,21 +87,21 @@ public extension DatabaseManager
             
             guard !self.isStarted else { return finish(nil) }
             
-            #if DEBUG
-            // Wrap in #if DEBUG to *ensure* we never accidentally delete production databases.
-            if ProcessInfo.processInfo.isPreview
-            {
-                do
-                {
-                    print("!!! Purging database for preview...")
-                    try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
-                }
-                catch
-                {
-                    print("Failed to remove database directory for preview.", error)
-                }
-            }
-            #endif
+//            #if DEBUG
+//            // Wrap in #if DEBUG to *ensure* we never accidentally delete production databases.
+//            if ProcessInfo.processInfo.isPreview
+//            {
+//                do
+//                {
+//                    print("!!! Purging database for preview...")
+//                    try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
+//                }
+//                catch
+//                {
+//                    print("Failed to remove database directory for preview.", error)
+//                }
+//            }
+//            #endif
             
             if self.persistentContainer.isMigrationRequired
             {
@@ -354,11 +354,11 @@ private extension DatabaseManager
             
             let fileURL = installedApp.fileURL
             
-            #if DEBUG
-            let replaceCachedApp = true
-            #else
+//            #if DEBUG
+//            let replaceCachedApp = true
+//            #else
             let replaceCachedApp = !FileManager.default.fileExists(atPath: fileURL.path) || installedApp.version != localApp.version || installedApp.buildVersion != localApp.buildVersion
-            #endif
+//            #endif
             
             if replaceCachedApp
             {

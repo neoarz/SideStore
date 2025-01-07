@@ -2280,6 +2280,7 @@ private extension AppManager
                 AnalyticsManager.shared.trackEvent(event)
             }
             
+            // Ask widgets to be refreshed
             WidgetCenter.shared.reloadAllTimelines()
             
             do 

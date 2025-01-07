@@ -318,11 +318,11 @@ extension PatreonViewController
                 case .none: footerView.button.isIndicatingActivity = true
                 case .success?: footerView.button.isHidden = true
                 case .failure?:
-                    #if DEBUG
-                    let debug = true
-                    #else
+//                    #if DEBUG
+//                    let debug = true
+//                    #else
                     let debug = false
-                    #endif
+//                    #endif
                     
                     if self.patronsDataSource.itemCount == 0 || debug
                     {
