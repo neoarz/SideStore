@@ -330,7 +330,14 @@ ipa-altbackup: checkPaths copy-altbackup
 	@cp	   -f	"$(ALT_APP_IPA_DST)" AltStore/Resources
 	@echo "  IPA created: AltStore/Resources/AltBackup.ipa"
 
-clean:
+clean-altbackup:
+	@echo ""
+	@echo "====> Cleaning up AltBackup related artifacts <===="
+	@rm -rf build/altbackup.xcarchive/
+	@rm -f build/AltBackup.ipa
+	@rm -f AltStore/Resources/AltBackup.ipa
+
+clean: clean-altbackup
 	@rm -rf *.xcarchive/
 	@rm -rf *.dSYM/
 	@rm -rf SideStore.ipa
