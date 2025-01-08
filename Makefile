@@ -302,13 +302,13 @@ copy-altbackup: checkPaths
 			else \
 				rm -rf "$$TGT"; \
 				mkdir -p "$$TGT"; \
-				cp -R "$(ALT_APP_SRC_PARENT)/$(TGT_NAME)" "$$TGT"; \
+				cp -R -f "$(ALT_APP_SRC_PARENT)/$$TGT_NAME/." "$$TGT"; \
 				echo "  Copied  $$TGT_NAME into TARGET = $$TGT"; \
 				echo ""; \
 			fi; \
 		done \
 	'
-	@find "$(ALT_APP_DST_ARCHIVE)" -maxdepth 3 -exec ls -ld {} + || true
+	@find "$(ALT_APP_DST_ARCHIVE)" -maxdepth 4 -exec ls -ld {} + || true
 	@echo ''
 
 # fakesign-altbackup: copy-altbackup
@@ -325,7 +325,7 @@ ipa-altbackup: checkPaths copy-altbackup
 	@rm -rf 	"$(ALT_APP_PAYLOAD_DST)"
 	@mkdir -p 	"$(ALT_APP_PAYLOAD_DST)/$(TARGET_NAME)"
 	@echo " Copying from $(ALT_APP_SRC) into $(ALT_APP_PAYLOAD_DST)"
-	@cp -R -f	"$(ALT_APP_SRC)/" "$(ALT_APP_PAYLOAD_DST)/$(TARGET_NAME)"
+	@cp -R -f	"$(ALT_APP_SRC)/." "$(ALT_APP_PAYLOAD_DST)/$(TARGET_NAME)"
 	@pushd 		"$(ALT_APP_DST_ARCHIVE)" && zip -r "../../$(ALT_APP_IPA_DST)" Payload && popd
 	@cp	   -f	"$(ALT_APP_IPA_DST)" AltStore/Resources
 	@echo "  IPA created: AltStore/Resources/AltBackup.ipa"
