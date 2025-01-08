@@ -24,17 +24,25 @@ private extension Color
 //@available(iOS 17, *)
 struct ActiveAppsWidget: Widget
 {
-    private let kind: String = "ActiveApps"
+    private var viewModel = PaginationViewModel.getNewInstance(
+        "ActiveApps" + UUID().uuidString
+    )
     
     public var body: some WidgetConfiguration {
         if #available(iOS 17, *)
         {
-            return StaticConfiguration(kind: kind, provider: AppsTimelineProvider()) { entry in
-                ActiveAppsWidgetView(entry: entry)
+            let staticConfig =  StaticConfiguration(
+                kind: viewModel.widgetID,
+                provider: AppsTimelineProvider(viewModel)
+            ) { entry in
+                ActiveAppsWidgetView(entry: entry, viewModel: viewModel)
             }
             .supportedFamilies([.systemMedium])
             .configurationDisplayName("Active Apps")
             .description("View remaining days until your active apps expire. Tap the countdown timers to refresh them in the background.")
+            
+            // this widgetConfiguration is requested/drawn once per widget per process lifecycle
+            return staticConfig
         }
         else
         {
@@ -50,8 +58,15 @@ private struct ActiveAppsWidgetView: View
 {
     var entry: AppsEntry
     
+    @ObservedObject private var viewModel: PaginationViewModel
+    
     @Environment(\.colorScheme)
     private var colorScheme
+    
+    init(entry: AppsEntry, viewModel: PaginationViewModel){
+        self.entry = entry
+        self.viewModel = viewModel
+    }
     
     var body: some View {
         Group {
@@ -80,16 +95,20 @@ private struct ActiveAppsWidgetView: View
     private var content: some View {
         GeometryReader { (geometry) in
             
-            let numberOfApps = max(entry.apps.count, 1) // Ensure we don't divide by 0
-            let preferredRowHeight = (geometry.size.height / Double(numberOfApps)) - 8
+            let MAX_ROWS_PER_PAGE = PaginationViewModel.MAX_ROWS_PER_PAGE
+            
+            let preferredRowHeight = (geometry.size.height / Double(MAX_ROWS_PER_PAGE)) - 8
             let rowHeight = min(preferredRowHeight, geometry.size.height / 2)
             
-            ZStack(alignment: .center) {
-                VStack(spacing: 12) {
-                    ForEach(entry.apps, id: \.bundleIdentifier) { app in
+            HStack(alignment: .center) {
+                
+//                VStack(spacing: 12) {
+                LazyVStack(spacing: 12) {
+                    ForEach($viewModel.sliding_window, id: \.bundleIdentifier) { app in
+                        let app = app.wrappedValue      // remove the binding
                         
-                        let icon = app.icon ?? UIImage(named: "SideStore")!
-
+                        let icon: UIImage = app.icon ?? UIImage(named: "SideStore")!
+                        
                         // 1024x1024 images are not supported by previews but supported by device
                         // so we scale the image to 97% so as to reduce its actual size but not too much
                         // to somewhere below value, acceptable by previews ie < 1042x948
@@ -99,9 +118,9 @@ private struct ActiveAppsWidgetView: View
                             width:  icon.size.width * scalingFactor,
                             height: icon.size.height * scalingFactor
                         )
-                            
+                        
                         let resizedIcon = icon.resizing(to: resizedSize)!
-
+                        
                         let daysRemaining = app.expirationDate.numberOfCalendarDays(since: entry.date)
                         let cornerRadius = rowHeight / 5.0
                         
@@ -142,12 +161,33 @@ private struct ActiveAppsWidgetView: View
                             }
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .invalidatableContent()
-                            .padding(.horizontal, 8)
                             .activatesRefreshAllAppsIntent()
                         }
                         .frame(height: rowHeight)
                     }
                 }
+                
+                Spacer(minLength: 16)
+                
+                let buttonWidth: CGFloat = 16
+                VStack {
+                    Image(systemName: "arrow.up")
+                        .resizable()
+                        .frame(width: buttonWidth, height: buttonWidth)
+                        .mask(Capsule())
+                        .opacity(0.3)
+                        .pageUpButton(widgetID: viewModel.widgetID)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "arrow.down")
+                        .resizable()
+                        .frame(width: buttonWidth, height: buttonWidth)
+                        .opacity(0.3)
+                        .mask(Capsule())
+                        .pageDownButton(widgetID: viewModel.widgetID)
+                }
+                .padding(.vertical)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

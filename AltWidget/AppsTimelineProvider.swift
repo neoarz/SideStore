@@ -24,6 +24,29 @@ struct AppsTimelineProvider
 {
     typealias Entry = AppsEntry
     
+    private var viewModel: PaginationViewModel?
+    private let widgetID: String?
+    
+    init(_ viewModel: PaginationViewModel? = nil){
+        self.viewModel = viewModel
+        self.widgetID = viewModel?.widgetID
+    }
+    
+    private func reloadEntries(apps: [AppSnapshot]){
+        guard let viewModel = self.viewModel else { return }
+        
+        let entries     = Set(viewModel.backup_entries.map{ (app: AppSnapshot) in app.bundleIdentifier })
+        let app_entries = Set(apps.map{ (app: AppSnapshot) in app.bundleIdentifier })
+        
+        // this updates the in-memory entries
+        if entries.isEmpty || entries != app_entries{
+            self.viewModel?.setEntries(apps)
+            // initialize the view
+            self.viewModel?.handlePagination(.up)
+        }
+    }
+    
+    
     func placeholder(in context: TimelineProviderContext) -> AppsEntry
     {
         return AppsEntry(date: Date(), apps: [], isPlaceholder: true)
@@ -36,6 +59,9 @@ struct AppsTimelineProvider
             try await self.prepare()
             
             let apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
+            
+            // send this for pagination
+            reloadEntries(apps: apps)
             
             let entry = AppsEntry(date: Date(), apps: apps)
             return entry
@@ -56,7 +82,10 @@ struct AppsTimelineProvider
             try await self.prepare()
             
             let apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
-            
+
+            // send this for pagination
+            reloadEntries(apps: apps)
+
             let entries = self.makeEntries(for: apps)
             let timeline = Timeline(entries: entries, policy: .atEnd)
             return timeline
@@ -203,6 +232,7 @@ extension AppsTimelineProvider: TimelineProvider
 
 extension AppsTimelineProvider: IntentTimelineProvider
 {
+
     typealias Intent = ViewAppIntent
     
     func getSnapshot(for intent: Intent, in context: Context, completion: @escaping (AppsEntry) -> Void)

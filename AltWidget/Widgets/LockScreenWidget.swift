@@ -82,6 +82,7 @@ private struct ComplicationView: View
         
         let progress = Double(daysRemaining) / Double(totalDays)
         
+        // TODO: Gauge initialized with an out-of-bounds progress amount. The amount will be clamped to the nearest bound.
         Gauge(value: progress) {
             if daysRemaining < 0
             {
