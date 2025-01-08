@@ -88,11 +88,25 @@ private struct ActiveAppsWidgetView: View
                 VStack(spacing: 12) {
                     ForEach(entry.apps, id: \.bundleIdentifier) { app in
                         
+                        let icon = app.icon ?? UIImage(named: "SideStore")!
+
+                        // 1024x1024 images are not supported by previews but supported by device
+                        // so we scale the image to 97% so as to reduce its actual size but not too much
+                        // to somewhere below value, acceptable by previews ie < 1042x948
+                        let scalingFactor = 0.97
+                        
+                        let resizedSize = CGSize(
+                            width:  icon.size.width * scalingFactor,
+                            height: icon.size.height * scalingFactor
+                        )
+                            
+                        let resizedIcon = icon.resizing(to: resizedSize)!
+
                         let daysRemaining = app.expirationDate.numberOfCalendarDays(since: entry.date)
                         let cornerRadius = rowHeight / 5.0
                         
                         HStack(spacing: 10) {
-                            Image(uiImage: app.icon ?? UIImage(named: "AltStore")!)
+                            Image(uiImage: resizedIcon)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .cornerRadius(cornerRadius)

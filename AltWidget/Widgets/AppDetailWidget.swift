@@ -130,7 +130,12 @@ private struct AppDetailWidgetView: View
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .widgetBackground(backgroundView(icon: entry.apps.first?.icon, tintColor: entry.apps.first?.tintColor))
+        .widgetBackground(
+            backgroundView(
+                icon: entry.apps.first?.icon,
+                tintColor: entry.apps.first?.tintColor
+            )
+        )
     }
 }
 
@@ -146,17 +151,35 @@ private extension AppDetailWidgetView
         let blurRadius = 5 as CGFloat
         let tintOpacity = 0.45
         
+        // 1024x1024 images are not supported by previews but supported by device
+        // so we scale the image to 97% so as to reduce its actual size but not too much
+        // to somewhere below value, acceptable by previews ie < 1042x948
+        let scalingFactor = 0.97
+        
+        let resizedSize = CGSize(
+            width:  icon.size.width * scalingFactor,
+            height: icon.size.height * scalingFactor
+        )
+            
+        let resizedIcon = icon.resizing(to: resizedSize)!
+        
         return ZStack(alignment: .topTrailing) {
             // Blurred Image
             GeometryReader { geometry in
                 ZStack {
-                    Image(uiImage: icon)
+                    Image(uiImage: resizedIcon)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: imageHeight, height: imageHeight, alignment: .center)
                         .saturation(saturation)
                         .blur(radius: blurRadius, opaque: true)
                         .scaleEffect(geometry.size.width / imageHeight, anchor: .center)
+                        // .onAppear {
+                        //     print("Geometry size: \(geometry.size)")
+                        //     print("Image height: \(imageHeight), Geometry width: \(geometry.size.width)")
+                        //     print("Icon size: \(icon.size)")
+                        // }
+                        
                     
                     Color(tintColor)
                         .opacity(tintOpacity)
@@ -176,13 +199,11 @@ private extension AppDetailWidgetView
     AppDetailWidget()
 } timeline: {
     let expiredDate = Date().addingTimeInterval(1 * 60 * 60 * 24 * 7)
-    let (altstore, delta, _, _, longDelta, _) = AppSnapshot.makePreviewSnapshots()
-    
+    let (altstore, _, _, longAltStore, _, _) = AppSnapshot.makePreviewSnapshots()
     AppsEntry(date: Date(), apps: [altstore])
-    AppsEntry(date: Date(), apps: [delta])
-    AppsEntry(date: Date(), apps: [longDelta])
+    AppsEntry(date: Date(), apps: [longAltStore])
     
-    AppsEntry(date: expiredDate, apps: [delta])
+    AppsEntry(date: expiredDate, apps: [altstore])
     
     AppsEntry(date: Date(), apps: [])
     AppsEntry(date: Date(), apps: [], isPlaceholder: true)
