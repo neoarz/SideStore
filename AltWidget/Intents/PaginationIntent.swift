@@ -9,13 +9,13 @@
 import AppIntents
 import WidgetKit
 
-public enum Direction: String{
+public enum Direction: String, Sendable{
     case up = "up"
     case down = "down"
 }
 
 @available(iOS 17, *)
-struct PaginationIntent: AppIntent, @unchecked Sendable {
+class PaginationIntent: AppIntent, @unchecked Sendable {
     static var title: LocalizedStringResource { "Scroll up or down in Active Apps Widget" }
     static var isDiscoverable: Bool { false }
 
@@ -25,7 +25,11 @@ struct PaginationIntent: AppIntent, @unchecked Sendable {
     @Parameter(title: "Widget Identifier")
     var widgetID: String
         
-    init(){}
+    private lazy var widgetHolderQ = {
+        DispatchQueue(label: widgetID)
+    }()
+    
+    required init(){}
     
     init(_ direction: Direction, _ widgetID: String){
         self.direction = direction.rawValue
@@ -33,13 +37,20 @@ struct PaginationIntent: AppIntent, @unchecked Sendable {
     }
 
     func perform() async throws -> some IntentResult {
-        let direction = Direction(rawValue: direction)!
-        guard let viewModel = PaginationViewModel.instance(widgetID) else{
-            print("viewModel for widgetID: \(widgetID) not found, ignoring request")
+        guard let direction = Direction(rawValue: self.direction) else {
             return .result()
         }
-        viewModel.handlePagination(direction)
-        WidgetCenter.shared.reloadTimelines(ofKind: viewModel.widgetID)
+        
+        widgetHolderQ.sync {
+            // update direction for this widgetID
+            let dataholder = PaginationDataHolder.holder(for: self.widgetID)
+            dataholder?.updateDirection(direction)
+
+            // ask widget views to be re-drawn by triggering timeline update
+            // for the widget uniquely identified by the 'kind: widgetID'
+            WidgetCenter.shared.reloadTimelines(ofKind: self.widgetID)
+        }
+        
         return .result()
     }
 }

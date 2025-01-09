@@ -24,28 +24,11 @@ struct AppsTimelineProvider
 {
     typealias Entry = AppsEntry
     
-    private var viewModel: PaginationViewModel?
-    private let widgetID: String?
+    private var dataHolder: PaginationDataHolder?
     
-    init(_ viewModel: PaginationViewModel? = nil){
-        self.viewModel = viewModel
-        self.widgetID = viewModel?.widgetID
+    init(_ dataHolder: PaginationDataHolder? = nil){
+        self.dataHolder = dataHolder
     }
-    
-    private func reloadEntries(apps: [AppSnapshot]){
-        guard let viewModel = self.viewModel else { return }
-        
-        let entries     = Set(viewModel.backup_entries.map{ (app: AppSnapshot) in app.bundleIdentifier })
-        let app_entries = Set(apps.map{ (app: AppSnapshot) in app.bundleIdentifier })
-        
-        // this updates the in-memory entries
-        if entries.isEmpty || entries != app_entries{
-            self.viewModel?.setEntries(apps)
-            // initialize the view
-            self.viewModel?.handlePagination(.up)
-        }
-    }
-    
     
     func placeholder(in context: TimelineProviderContext) -> AppsEntry
     {
@@ -58,10 +41,9 @@ struct AppsTimelineProvider
         {
             try await self.prepare()
             
-            let apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
+            var apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
             
-            // send this for pagination
-            reloadEntries(apps: apps)
+            apps = getUpdatedData(apps)
             
             let entry = AppsEntry(date: Date(), apps: apps)
             return entry
@@ -81,10 +63,9 @@ struct AppsTimelineProvider
         {
             try await self.prepare()
             
-            let apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
+            var apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
 
-            // send this for pagination
-            reloadEntries(apps: apps)
+            apps = getUpdatedData(apps)
 
             let entries = self.makeEntries(for: apps)
             let timeline = Timeline(entries: entries, policy: .atEnd)
@@ -103,6 +84,22 @@ struct AppsTimelineProvider
 
 private extension AppsTimelineProvider
 {
+    
+    private func getUpdatedData(_ apps: [AppSnapshot]) -> [AppSnapshot]{
+        var apps = apps
+        
+//        #if DEBUG
+//        // this dummy data is for simulator (uncomment when testing ActiveAppsWidget pagination)
+//        apps = apps + apps + apps + apps + apps + apps + apps + apps
+//        #endif
+
+        if let dataHolder{
+            // get paged data if present if available
+            apps = dataHolder.getUpdatedData(entries: apps)
+        }
+        return apps
+    }
+    
     func prepare() async throws
     {
         try await DatabaseManager.shared.start()

@@ -1,5 +1,5 @@
 //
-//  HomeScreenWidget.swift
+//  ActiveAppsWidget.swift
 //  AltWidgetExtension
 //
 //  Created by Riley Testut on 8/16/23.
@@ -8,10 +8,6 @@
 
 import SwiftUI
 import WidgetKit
-import CoreData
-
-import AltStoreCore
-import AltSign
 
 private extension Color
 {
@@ -24,24 +20,40 @@ private extension Color
 //@available(iOS 17, *)
 struct ActiveAppsWidget: Widget
 {
-    private var viewModel = PaginationViewModel.getNewInstance(
-        "ActiveApps" + UUID().uuidString
-    )
+    // only constants/singleton what needs to be for the life of all widgets of ActiveAppsWidget type
+    // should be declared as instance or class fields for ActiveAppWidgets
     
+    // NOTE: The computed property (widget)body is recomputed/re-run for every
+    //       'type' refers to struct/class types and 'kind' refers to the tag which the widget is marked with
+    //       multiple instances of same type or multiple types can be tagged with same 'kind'
+    //       or each instance of same kind too, can be tagged as different(unique) 'kind'
+    // 1. widget-resizing(of same type)
+    // 2. new widget addition(of same type)
     public var body: some WidgetConfiguration {
         if #available(iOS 17, *)
         {
+            let kind = "ActiveApps"
+            let widgetID = kind + "-" + UUID().uuidString
+
+            let holder = PaginationDataHolder.instance(widgetID)
+            let timelineProvider = AppsTimelineProvider(holder)             // pass the holder
+            
+            // each instance of this widget type is identified by unique 'kind' tag
+            // so that a reloadTimelineFor(kind:) will trigger reload only for that instance
             let staticConfig =  StaticConfiguration(
-                kind: viewModel.widgetID,
-                provider: AppsTimelineProvider(viewModel)
+                kind: widgetID,
+                provider: timelineProvider
             ) { entry in
-                ActiveAppsWidgetView(entry: entry, viewModel: viewModel)
+                // actual view of the widget
+                // this gets recreated for each trigger from the scheduled timeline entries provided by the timeline provider
+                // NOTE: widget views do not adhere to statefulness
+                // so, Combine constructs such as @State, @StateObject, @ObservedObject etc are simply ignored
+                ActiveAppsWidgetView(entry: entry, widgetID: widgetID)
             }
             .supportedFamilies([.systemMedium])
             .configurationDisplayName("Active Apps")
             .description("View remaining days until your active apps expire. Tap the countdown timers to refresh them in the background.")
             
-            // this widgetConfiguration is requested/drawn once per widget per process lifecycle
             return staticConfig
         }
         else
@@ -57,17 +69,11 @@ struct ActiveAppsWidget: Widget
 private struct ActiveAppsWidgetView: View
 {
     var entry: AppsEntry
-    
-    @ObservedObject private var viewModel: PaginationViewModel
+    var widgetID: String
     
     @Environment(\.colorScheme)
     private var colorScheme
-    
-    init(entry: AppsEntry, viewModel: PaginationViewModel){
-        self.entry = entry
-        self.viewModel = viewModel
-    }
-    
+        
     var body: some View {
         Group {
             if entry.apps.isEmpty
@@ -95,17 +101,14 @@ private struct ActiveAppsWidgetView: View
     private var content: some View {
         GeometryReader { (geometry) in
             
-            let MAX_ROWS_PER_PAGE = PaginationViewModel.MAX_ROWS_PER_PAGE
+            let MAX_ROWS_PER_PAGE = PaginationDataHolder.MAX_ROWS_PER_PAGE
             
             let preferredRowHeight = (geometry.size.height / Double(MAX_ROWS_PER_PAGE)) - 8
             let rowHeight = min(preferredRowHeight, geometry.size.height / 2)
             
             HStack(alignment: .center) {
-                
-//                VStack(spacing: 12) {
                 LazyVStack(spacing: 12) {
-                    ForEach($viewModel.sliding_window, id: \.bundleIdentifier) { app in
-                        let app = app.wrappedValue      // remove the binding
+                    ForEach(Array(entry.apps.enumerated()), id: \.offset) { index, app in
                         
                         let icon: UIImage = app.icon ?? UIImage(named: "SideStore")!
                         
@@ -160,6 +163,8 @@ private struct ActiveAppsWidgetView: View
                                     .padding(.all, -5)
                             }
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            // this modifier invalidates the view (disables userinteraction and shows a blinking effect)
+                            // until new timeline events occur, unless a observable boolean state is presented as parameter
                             .invalidatableContent()
                             .activatesRefreshAllAppsIntent()
                         }
@@ -174,9 +179,9 @@ private struct ActiveAppsWidgetView: View
                     Image(systemName: "arrow.up")
                         .resizable()
                         .frame(width: buttonWidth, height: buttonWidth)
-                        .mask(Capsule())
                         .opacity(0.3)
-                        .pageUpButton(widgetID: viewModel.widgetID)
+                        // .mask(Capsule())
+                        .pageUpButton(widgetID)
                     
                     Spacer()
                     
@@ -184,8 +189,8 @@ private struct ActiveAppsWidgetView: View
                         .resizable()
                         .frame(width: buttonWidth, height: buttonWidth)
                         .opacity(0.3)
-                        .mask(Capsule())
-                        .pageDownButton(widgetID: viewModel.widgetID)
+                        // .mask(Capsule())
+                        .pageDownButton(widgetID)
                 }
                 .padding(.vertical)
             }
