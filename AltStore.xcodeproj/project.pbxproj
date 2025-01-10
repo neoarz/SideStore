@@ -63,9 +63,11 @@
 		A82067C42D03E0DE00645C0D /* SemanticVersion in Frameworks */ = {isa = PBXBuildFile; productRef = A82067C32D03E0DE00645C0D /* SemanticVersion */; };
 		A859ED5C2D1EE827003DCC58 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; };
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868CFE32D319988002F1201 /* SingletonGenericMap.swift */; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
 		A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */; };
+		A8AD35592D31BF2C003A28B4 /* PageInfoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AD35582D31BF29003A28B4 /* PageInfoManager.swift */; };
 		A8B516E32D2666CA0047047C /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E22D2666CA0047047C /* CoreDataHelper.swift */; };
 		A8B516E62D2668170047047C /* DateTimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E52D2668020047047C /* DateTimeUtil.swift */; };
 		A8BB34E52D04EC8E000A8B4D /* minimuxer-helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A52D04DA1900F0F0F3 /* minimuxer-helpers.swift */; };
@@ -642,8 +644,10 @@
 		A85ACB932D1F31C400AA3DE7 /* AltWidgetExtension.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltWidgetExtension.xcconfig; sourceTree = "<group>"; };
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
+		A868CFE32D319988002F1201 /* SingletonGenericMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingletonGenericMap.swift; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppsTimelineProvider.swift; sourceTree = "<group>"; };
+		A8AD35582D31BF29003A28B4 /* PageInfoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageInfoManager.swift; sourceTree = "<group>"; };
 		A8B516E22D2666CA0047047C /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
 		A8B516E52D2668020047047C /* DateTimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeUtil.swift; sourceTree = "<group>"; };
 		A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogger.swift; sourceTree = "<group>"; };
@@ -1184,8 +1188,8 @@
 		A80D790B2D2F209700A40F40 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
-				A8096D172D30AD4F000C39C6 /* WidgetUpdateIntent.swift */,
 				A80D790C2D2F20AF00A40F40 /* PaginationIntent.swift */,
+				A8096D172D30AD4F000C39C6 /* WidgetUpdateIntent.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -1224,6 +1228,22 @@
 			path = pagination;
 			sourceTree = "<group>";
 		};
+		A8AD35562D31BE8F003A28B4 /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				A8AD35582D31BF29003A28B4 /* PageInfoManager.swift */,
+			);
+			path = Manager;
+			sourceTree = "<group>";
+		};
+		A8AD35572D31BEB2003A28B4 /* datastructures */ = {
+			isa = PBXGroup;
+			children = (
+				A868CFE32D319988002F1201 /* SingletonGenericMap.swift */,
+			);
+			path = datastructures;
+			sourceTree = "<group>";
+		};
 		A8B516DE2D2666900047047C /* dignostics */ = {
 			isa = PBXGroup;
 			children = (
@@ -1243,6 +1263,7 @@
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A8AD35572D31BEB2003A28B4 /* datastructures */,
 				A8A853AD2D3050CC00995795 /* pagination */,
 				A8087E712D2D291B002DB21B /* importexport */,
 				A8B516DE2D2666900047047C /* dignostics */,
@@ -1731,6 +1752,7 @@
 		BF98916C250AABF3002ACF50 /* AltWidget */ = {
 			isa = PBXGroup;
 			children = (
+				A8AD35562D31BE8F003A28B4 /* Manager */,
 				A80D790B2D2F209700A40F40 /* Intents */,
 				A8096D1D2D30ADD5000C39C6 /* Providers */,
 				A800F6FE2CE28DE300208744 /* Extensions */,
@@ -2940,7 +2962,9 @@
 				A8096D1C2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift in Sources */,
 				A80D790D2D2F20AF00A40F40 /* PaginationIntent.swift in Sources */,
 				D5FD4EC92A9530C00097BEE8 /* AppSnapshot.swift in Sources */,
+				A8AD35592D31BF2C003A28B4 /* PageInfoManager.swift in Sources */,
 				D5151BE72A90395400C96F28 /* View+AltWidget.swift in Sources */,
+				A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */,
 				A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */,
 				BF98917F250AAC4F002ACF50 /* LockScreenWidget.swift in Sources */,
 				A800F7042CE28E3800208744 /* View+AltWidget.swift in Sources */,

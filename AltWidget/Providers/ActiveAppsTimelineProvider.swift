@@ -8,77 +8,88 @@
 
 import WidgetKit
 
-protocol Navigation{
-    var direction: Direction? { get }
+protocol WidgetInfo{
+    var ID: Int? { get }
 }
 
 @available(iOS 17, *)
-class ActiveAppsTimelineProvider: AppsTimelineProviderBase<Navigation> {
-    
-    let uuid = UUID().uuidString
-    
+class ActiveAppsTimelineProvider<T:  WidgetInfo>: AppsTimelineProviderBase<WidgetInfo> {
+    public struct WidgetData: WidgetInfo {
+        let ID: Int?
+    }
+
     private let dataHolder: PaginationDataHolder
     private let widgetID: String
     
     init(kind: String){
-        print("Executing ActiveAppsTimelineProvider.init() for instance \(uuid)")
         
         let itemsPerPage = ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
         self.dataHolder = PaginationDataHolder(itemsPerPage: itemsPerPage)
         self.widgetID = kind
     }
     
-    override func getUpdatedData(_ apps: [AppSnapshot], _ context: Navigation?) -> [AppSnapshot] {
-        guard let context = context else { return apps }
-        
+    deinit{
+        // if this provider goes out of scope, clear all entries
+        PageInfoManager.shared.clearAll()
+    }
+    
+    override func getUpdatedData(_ apps: [AppSnapshot], _ context: WidgetInfo?) -> [AppSnapshot] {
         var apps = apps
         
-//        #if DEBUG
-//        apps = getSimulatedData(apps: apps)
-//        #endif
+        #if targetEnvironment(simulator)
+        apps = getSimulatedData(apps: apps)
+        #endif
         
-        if let direction = context.direction{
-            // get paged data if available
-            switch (direction){
-                case Direction.up:
-                    apps = dataHolder.prevPage(inItems: apps, whenUnavailable: .current)!
-                case Direction.down:
-                    apps = dataHolder.nextPage(inItems: apps, whenUnavailable: .current)!
+        var currentPageApps = dataHolder.currentPage(inItems: apps)
+        if  let widgetInfo = context,
+            let widgetID = widgetInfo.ID {
+            
+            var navEvent: NavigationEvent? = PageInfoManager.shared.getPageInfo(for: widgetID)
+            if  let event = navEvent,
+                let direction = event.direction
+            {
+                // process navigation request only if event wasn't consumed yet
+                if !event.consumed {
+                    switch (direction){
+                        case Direction.up:
+                            currentPageApps = dataHolder.prevPage(inItems: apps, whenUnavailable: .current)!
+                        case Direction.down:
+                            currentPageApps = dataHolder.nextPage(inItems: apps, whenUnavailable: .current)!
+                    }
+                    // mark the event as consumed
+                    // this prevents duplicate getUpdatedData() requests for same navigation event
+                    navEvent!.consumed = true
+                }
             }
-        }else{
-            // retain what ever page we were on as-is
-            apps = dataHolder.currentPage(inItems: apps)
+            PageInfoManager.shared.setPageInfo(for: widgetID, value: navEvent)
         }
                 
-        return apps
+        return currentPageApps
     }
 }
 
+/// TimelineProvider for WidgetAppIntentConfiguration widget type
 @available(iOS 17, *)
 extension ActiveAppsTimelineProvider: AppIntentTimelineProvider {
     
-    struct IntentData: Navigation{
-        let direction: Direction?
-    }
-
     typealias Intent = WidgetUpdateIntent
 
-    func snapshot(for intent: Intent, in context: Context) async -> AppsEntry {
-        let data = IntentData(direction: intent.getDirection(widgetID))
+    func snapshot(for intent: Intent, in context: Context) async -> AppsEntry<WidgetInfo> {
+        // system retains the previously configured ID value and posts the same here
+        let widgetData = WidgetData(ID: intent.ID)
         
         let bundleIDs = await super.fetchActiveAppBundleIDs()
-        
-        let snapshot = await self.snapshot(for: bundleIDs, in: data)
+        let snapshot = await self.snapshot(for: bundleIDs, in: widgetData)
         
         return snapshot
     }
     
-    func timeline(for intent: Intent, in context: Context) async -> Timeline<AppsEntry> {
-        let data = IntentData(direction: intent.getDirection(widgetID))
- 
+    func timeline(for intent: Intent, in context: Context) async -> Timeline<AppsEntry<WidgetInfo>> {
+        // system retains the previously configured ID value and posts the same here
+        let widgetData = WidgetData(ID: intent.ID)
+
         let bundleIDs = await self.fetchActiveAppBundleIDs()
-        
-        let timeline = await self.timeline(for: bundleIDs, in: data)
+        let timeline = await self.timeline(for: bundleIDs, in: widgetData)
 
         return timeline
     }

@@ -8,7 +8,7 @@
 
 
 /// Simulator data generator
-#if DEBUG
+#if targetEnvironment(simulator)
 @available(iOS 17, *)
 extension ActiveAppsTimelineProvider {
 
@@ -18,7 +18,7 @@ extension ActiveAppsTimelineProvider {
         // this dummy data is for simulator (uncomment when testing ActiveAppsWidget pagination)
         if (apps.count > 0){
             let app = apps[0]
-            for i in 0..<10 {
+            for i in 1...10 {
                 let name = "\(app.name) - \(i)"
                 let x = AppSnapshot(name: name,
                                     bundleIdentifier: app.bundleIdentifier,
