@@ -20,22 +20,16 @@ struct AppsEntry: TimelineEntry
     var isPlaceholder: Bool = false
 }
 
-struct AppsTimelineProvider
+class AppsTimelineProviderBase<T>
 {
     typealias Entry = AppsEntry
-    
-    private var dataHolder: PaginationDataHolder?
-    
-    init(_ dataHolder: PaginationDataHolder? = nil){
-        self.dataHolder = dataHolder
-    }
     
     func placeholder(in context: TimelineProviderContext) -> AppsEntry
     {
         return AppsEntry(date: Date(), apps: [], isPlaceholder: true)
     }
     
-    func snapshot(for appBundleIDs: [String]) async -> AppsEntry
+    func snapshot(for appBundleIDs: [String], in context: T? = nil) async -> AppsEntry
     {
         do
         {
@@ -43,7 +37,7 @@ struct AppsTimelineProvider
             
             var apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
             
-            apps = getUpdatedData(apps)
+            apps = getUpdatedData(apps, context)
             
             let entry = AppsEntry(date: Date(), apps: apps)
             return entry
@@ -57,7 +51,7 @@ struct AppsTimelineProvider
         }
     }
     
-    func timeline(for appBundleIDs: [String]) async -> Timeline<AppsEntry>
+    func timeline(for appBundleIDs: [String], in context: T? = nil) async -> Timeline<AppsEntry>
     {
         do
         {
@@ -65,7 +59,7 @@ struct AppsTimelineProvider
             
             var apps = try await self.fetchApps(withBundleIDs: appBundleIDs)
 
-            apps = getUpdatedData(apps)
+            apps = getUpdatedData(apps, context)
 
             let entries = self.makeEntries(for: apps)
             let timeline = Timeline(entries: entries, policy: .atEnd)
@@ -80,32 +74,22 @@ struct AppsTimelineProvider
             return timeline
         }
     }
-}
-
-private extension AppsTimelineProvider
-{
     
-    private func getUpdatedData(_ apps: [AppSnapshot]) -> [AppSnapshot]{
-        var apps = apps
-        
-//        #if DEBUG
-//        // this dummy data is for simulator (uncomment when testing ActiveAppsWidget pagination)
-//        apps = apps + apps + apps + apps + apps + apps + apps + apps
-//        #endif
-
-        if let dataHolder{
-            // get paged data if present if available
-            apps = dataHolder.getUpdatedData(entries: apps)
-        }
+    func getUpdatedData(_ apps: [AppSnapshot], _ context: T?) -> [AppSnapshot]{
+        // override in subclasses as required
         return apps
     }
+}
+
+extension AppsTimelineProviderBase
+{
     
-    func prepare() async throws
+    private func prepare() async throws
     {
         try await DatabaseManager.shared.start()
     }
     
-    func fetchApps(withBundleIDs bundleIDs: [String]) async throws -> [AppSnapshot]
+    private func fetchApps(withBundleIDs bundleIDs: [String]) async throws -> [AppSnapshot]
     {
         let context = DatabaseManager.shared.persistentContainer.newBackgroundContext()
         let apps = try await context.performAsync {
@@ -176,31 +160,8 @@ private extension AppsTimelineProvider
         
         return entries
     }
-}
-
-extension AppsTimelineProvider: TimelineProvider
-{
-    func getSnapshot(in context: Context, completion: @escaping (AppsEntry) -> Void)
-    {
-        Task<Void, Never> {
-            let bundleIDs = await self.fetchActiveAppBundleIDs()
-            
-            let snapshot = await self.snapshot(for: bundleIDs)
-            completion(snapshot)
-        }
-    }
     
-    func getTimeline(in context: Context, completion: @escaping (Timeline<AppsEntry>) -> Void)
-    {
-        Task<Void, Never> {
-            let bundleIDs = await self.fetchActiveAppBundleIDs()
-            
-            let timeline = await self.timeline(for: bundleIDs)
-            completion(timeline)
-        }
-    }
-    
-    private func fetchActiveAppBundleIDs() async -> [String]
+    func fetchActiveAppBundleIDs() async -> [String]
     {
         do
         {
@@ -227,9 +188,8 @@ extension AppsTimelineProvider: TimelineProvider
     }
 }
 
-extension AppsTimelineProvider: IntentTimelineProvider
+class AppsTimelineProvider: AppsTimelineProviderBase<ViewAppIntent>, IntentTimelineProvider
 {
-
     typealias Intent = ViewAppIntent
     
     func getSnapshot(for intent: Intent, in context: Context, completion: @escaping (AppsEntry) -> Void)
@@ -237,7 +197,7 @@ extension AppsTimelineProvider: IntentTimelineProvider
         Task<Void, Never> {
             let bundleIDs = [intent.app?.identifier ?? StoreApp.altstoreAppID]
             
-            let snapshot = await self.snapshot(for: bundleIDs)
+            let snapshot = await self.snapshot(for: bundleIDs, in: intent)
             completion(snapshot)
         }
     }
@@ -247,7 +207,7 @@ extension AppsTimelineProvider: IntentTimelineProvider
         Task<Void, Never> {
             let bundleIDs = [intent.app?.identifier ?? StoreApp.altstoreAppID]
             
-            let timeline = await self.timeline(for: bundleIDs)
+            let timeline = await self.timeline(for: bundleIDs, in: intent)
             completion(timeline)
         }
     }

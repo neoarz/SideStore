@@ -51,6 +51,8 @@
 		A800F7042CE28E3800208744 /* View+AltWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A800F7032CE28E2F00208744 /* View+AltWidget.swift */; };
 		A805C3CD2D0C316A00E76BDD /* Pods_SideStore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A805C3CC2D0C316A00E76BDD /* Pods_SideStore.framework */; };
 		A8087E752D2D2958002DB21B /* ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8087E742D2D2958002DB21B /* ImportExport.swift */; };
+		A8096D182D30AD4F000C39C6 /* WidgetUpdateIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8096D172D30AD4F000C39C6 /* WidgetUpdateIntent.swift */; };
+		A8096D1C2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8096D1B2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift */; };
 		A809F69E2D04D7AC00F0F0F3 /* libminimuxer_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A809F68E2D04D71200F0F0F3 /* libminimuxer_static.a */; };
 		A809F69F2D04D7B300F0F0F3 /* libem_proxy_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A809F6942D04D71200F0F0F3 /* libem_proxy_static.a */; };
 		A809F6A82D04DA1900F0F0F3 /* minimuxer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A32D04DA1900F0F0F3 /* minimuxer.swift */; };
@@ -63,6 +65,7 @@
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
+		A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */; };
 		A8B516E32D2666CA0047047C /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E22D2666CA0047047C /* CoreDataHelper.swift */; };
 		A8B516E62D2668170047047C /* DateTimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B516E52D2668020047047C /* DateTimeUtil.swift */; };
 		A8BB34E52D04EC8E000A8B4D /* minimuxer-helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A809F6A52D04DA1900F0F0F3 /* minimuxer-helpers.swift */; };
@@ -620,6 +623,8 @@
 		A800F7032CE28E2F00208744 /* View+AltWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+AltWidget.swift"; sourceTree = "<group>"; };
 		A805C3CC2D0C316A00E76BDD /* Pods_SideStore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_SideStore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8087E742D2D2958002DB21B /* ImportExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExport.swift; sourceTree = "<group>"; };
+		A8096D172D30AD4F000C39C6 /* WidgetUpdateIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetUpdateIntent.swift; sourceTree = "<group>"; };
+		A8096D1B2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveAppsTimelineProvider+Simulator.swift"; sourceTree = "<group>"; };
 		A809F6A22D04DA1900F0F0F3 /* minimuxer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = minimuxer.h; sourceTree = "<group>"; };
 		A809F6A32D04DA1900F0F0F3 /* minimuxer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = minimuxer.swift; sourceTree = "<group>"; };
 		A809F6A42D04DA1900F0F0F3 /* minimuxer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "minimuxer-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -638,6 +643,7 @@
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppsTimelineProvider.swift; sourceTree = "<group>"; };
 		A8B516E22D2666CA0047047C /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
 		A8B516E52D2668020047047C /* DateTimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimeUtil.swift; sourceTree = "<group>"; };
 		A8C38C1D2D206A3A00E83DBD /* ConsoleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogger.swift; sourceTree = "<group>"; };
@@ -1148,6 +1154,16 @@
 			path = importexport;
 			sourceTree = "<group>";
 		};
+		A8096D1D2D30ADD5000C39C6 /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				D577AB7A2A967DF5007FE952 /* AppsTimelineProvider.swift */,
+				A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */,
+				A8096D1B2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
 		A809F68A2D04D71200F0F0F3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1168,6 +1184,7 @@
 		A80D790B2D2F209700A40F40 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
+				A8096D172D30AD4F000C39C6 /* WidgetUpdateIntent.swift */,
 				A80D790C2D2F20AF00A40F40 /* PaginationIntent.swift */,
 			);
 			path = Intents;
@@ -1199,6 +1216,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A8A853AD2D3050CC00995795 /* pagination */ = {
+			isa = PBXGroup;
+			children = (
+				A80D790E2D2F217000A40F40 /* PaginationDataHolder.swift */,
+			);
+			path = pagination;
+			sourceTree = "<group>";
+		};
 		A8B516DE2D2666900047047C /* dignostics */ = {
 			isa = PBXGroup;
 			children = (
@@ -1218,6 +1243,7 @@
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A8A853AD2D3050CC00995795 /* pagination */,
 				A8087E712D2D291B002DB21B /* importexport */,
 				A8B516DE2D2666900047047C /* dignostics */,
 				A8C38C272D206AA500E83DBD /* common */,
@@ -1706,10 +1732,10 @@
 			isa = PBXGroup;
 			children = (
 				A80D790B2D2F209700A40F40 /* Intents */,
+				A8096D1D2D30ADD5000C39C6 /* Providers */,
 				A800F6FE2CE28DE300208744 /* Extensions */,
 				BF8B17F0250AC62400F8157F /* AltWidgetExtension.entitlements */,
 				D5FD4EC42A952EAD0097BEE8 /* AltWidgetBundle.swift */,
-				D577AB7A2A967DF5007FE952 /* AppsTimelineProvider.swift */,
 				D50C29F22A8ECD71009AB488 /* Widgets */,
 				D51AF9752A97D29100471312 /* Model */,
 				D577AB802A968B7E007FE952 /* Components */,
@@ -2080,7 +2106,6 @@
 		D50C29F22A8ECD71009AB488 /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
-				A80D790E2D2F217000A40F40 /* PaginationDataHolder.swift */,
 				D577AB7E2A96878A007FE952 /* AppDetailWidget.swift */,
 				D55467C42A8D72C300F4CE90 /* ActiveAppsWidget.swift */,
 				BF98917D250AAC4F002ACF50 /* LockScreenWidget.swift */,
@@ -2912,13 +2937,16 @@
 				D577AB7F2A96878A007FE952 /* AppDetailWidget.swift in Sources */,
 				BF98917E250AAC4F002ACF50 /* Countdown.swift in Sources */,
 				D5151BE22A90363300C96F28 /* RefreshAllAppsWidgetIntent.swift in Sources */,
+				A8096D1C2D30ADA9000C39C6 /* ActiveAppsTimelineProvider+Simulator.swift in Sources */,
 				A80D790D2D2F20AF00A40F40 /* PaginationIntent.swift in Sources */,
 				D5FD4EC92A9530C00097BEE8 /* AppSnapshot.swift in Sources */,
 				D5151BE72A90395400C96F28 /* View+AltWidget.swift in Sources */,
+				A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */,
 				BF98917F250AAC4F002ACF50 /* LockScreenWidget.swift in Sources */,
 				A800F7042CE28E3800208744 /* View+AltWidget.swift in Sources */,
 				BF98917F250AAC4F002ACF50 /* LockScreenWidget.swift in Sources */,
 				D5FD4EC52A952EAD0097BEE8 /* AltWidgetBundle.swift in Sources */,
+				A8096D182D30AD4F000C39C6 /* WidgetUpdateIntent.swift in Sources */,
 				A80D790F2D2F217000A40F40 /* PaginationDataHolder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

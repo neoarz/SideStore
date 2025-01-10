@@ -9,6 +9,8 @@
 import SwiftUI
 import WidgetKit
 
+import AltStoreCore
+
 private extension Color
 {
     static let altGradientLight = Color.init(.displayP3, red: 123.0/255.0, green: 200.0/255.0, blue: 176.0/255.0)
@@ -17,44 +19,36 @@ private extension Color
     static let altGradientExtraDark = Color.init(.displayP3, red: 2.0/255.0, green: 82.0/255.0, blue: 103.0/255.0)
 }
 
+
 //@available(iOS 17, *)
 struct ActiveAppsWidget: Widget
 {
-    // only constants/singleton what needs to be for the life of all widgets of ActiveAppsWidget type
-    // should be declared as instance or class fields for ActiveAppWidgets
+    struct Constants{
+        static let MAX_ROWS_PER_PAGE: UInt = 3
+    }
     
-    // NOTE: The computed property (widget)body is recomputed/re-run for every
-    //       'type' refers to struct/class types and 'kind' refers to the tag which the widget is marked with
-    //       multiple instances of same type or multiple types can be tagged with same 'kind'
-    //       or each instance of same kind too, can be tagged as different(unique) 'kind'
-    // 1. widget-resizing(of same type)
-    // 2. new widget addition(of same type)
+    let ID = UUID().uuidString
+
     public var body: some WidgetConfiguration {
+        print("Executing ActiveAppsWidget.body for instance \(ID)")
+
         if #available(iOS 17, *)
         {
-            let kind = "ActiveApps"
-            let widgetID = kind + "-" + UUID().uuidString
+            let widgetID = "ActiveApps - \(UUID().uuidString)"
 
-            let holder = PaginationDataHolder.instance(widgetID)
-            let timelineProvider = AppsTimelineProvider(holder)             // pass the holder
-            
-            // each instance of this widget type is identified by unique 'kind' tag
-            // so that a reloadTimelineFor(kind:) will trigger reload only for that instance
-            let staticConfig =  StaticConfiguration(
+            let widgetConfig = AppIntentConfiguration(
                 kind: widgetID,
-                provider: timelineProvider
+//                intent: PaginationIntent.self,  // Use the defined AppIntent
+                intent: WidgetUpdateIntent.self,  // Use the defined AppIntent
+                provider: ActiveAppsTimelineProvider(kind: widgetID)
             ) { entry in
-                // actual view of the widget
-                // this gets recreated for each trigger from the scheduled timeline entries provided by the timeline provider
-                // NOTE: widget views do not adhere to statefulness
-                // so, Combine constructs such as @State, @StateObject, @ObservedObject etc are simply ignored
                 ActiveAppsWidgetView(entry: entry, widgetID: widgetID)
             }
             .supportedFamilies([.systemMedium])
             .configurationDisplayName("Active Apps")
             .description("View remaining days until your active apps expire. Tap the countdown timers to refresh them in the background.")
             
-            return staticConfig
+            return widgetConfig
         }
         else
         {
@@ -70,6 +64,15 @@ private struct ActiveAppsWidgetView: View
 {
     var entry: AppsEntry
     var widgetID: String
+    
+    let ID = UUID().uuidString
+
+    init(entry: AppsEntry, widgetID: String) {
+        print("Executing ActiveAppsWidgetView.init() for instance \(ID)")
+
+        self.entry = entry
+        self.widgetID = widgetID
+    }
     
     @Environment(\.colorScheme)
     private var colorScheme
@@ -101,9 +104,9 @@ private struct ActiveAppsWidgetView: View
     private var content: some View {
         GeometryReader { (geometry) in
             
-            let MAX_ROWS_PER_PAGE = PaginationDataHolder.MAX_ROWS_PER_PAGE
+            let itemsPerPage = ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
             
-            let preferredRowHeight = (geometry.size.height / Double(MAX_ROWS_PER_PAGE)) - 8
+            let preferredRowHeight = (geometry.size.height / Double(itemsPerPage)) - 8
             let rowHeight = min(preferredRowHeight, geometry.size.height / 2)
             
             HStack(alignment: .center) {
