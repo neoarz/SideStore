@@ -18,15 +18,9 @@ class ActiveAppsTimelineProvider<T:  WidgetInfo>: AppsTimelineProviderBase<Widge
         let ID: Int?
     }
 
-    private let dataHolder: PaginationDataHolder
-    private let widgetID: String
-    
-    init(kind: String){
-        
-        let itemsPerPage = ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
-        self.dataHolder = PaginationDataHolder(itemsPerPage: itemsPerPage)
-        self.widgetID = kind
-    }
+    private let dataHolder = PaginationDataHolder(
+        itemsPerPage: ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
+    )
     
     deinit{
         // if this provider goes out of scope, clear all entries

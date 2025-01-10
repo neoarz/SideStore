@@ -32,17 +32,18 @@ struct ActiveAppsWidget: Widget
         static let MAX_ROWS_PER_PAGE: UInt = 3
     }
     
+    let widgetKind = "ActiveApps - \(UUID().uuidString)"
+
     public var body: some WidgetConfiguration {
         if #available(iOS 17, *)
         {
-            let widgetID = "ActiveApps - \(UUID().uuidString)"
 
             let widgetConfig = AppIntentConfiguration(
-                kind: widgetID,
+                kind: widgetKind,
                 intent: WidgetUpdateIntent.self,
-                provider: ActiveAppsTimelineProvider<WidgetTag>(kind: widgetID)
+                provider: ActiveAppsTimelineProvider<WidgetTag>()
             ) { entry in
-                ActiveAppsWidgetView(entry: entry)
+                ActiveAppsWidgetView(entry: entry, widgetKind: widgetKind)
             }
             .supportedFamilies([.systemMedium])
             .configurationDisplayName("Active Apps")
@@ -63,6 +64,7 @@ struct ActiveAppsWidget: Widget
 private struct ActiveAppsWidgetView: View
 {
     var entry: AppsEntry<WidgetInfo>
+    var widgetKind: String
     
     @Environment(\.colorScheme)
     private var colorScheme
@@ -204,7 +206,7 @@ private struct ActiveAppsWidgetView: View
                 .frame(width: buttonWidth, height: buttonWidth)
                 .opacity(0.3)
                 // .mask(Capsule())
-                .pageUpButton(widgetID)
+                .pageUpButton(widgetID, widgetKind)
             
             Spacer()
             
@@ -213,7 +215,7 @@ private struct ActiveAppsWidgetView: View
                 .frame(width: buttonWidth, height: buttonWidth)
                 .opacity(0.3)
                 // .mask(Capsule())
-                .pageDownButton(widgetID)
+                .pageDownButton(widgetID, widgetKind)
         }
         .padding(.vertical)
     }

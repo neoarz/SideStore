@@ -34,22 +34,27 @@ class PaginationIntent: AppIntent, @unchecked Sendable {
     @Parameter(title: "Direction")
     var direction: String
 
+    @Parameter(title: "widgetKind")
+    var widgetKind: String
+
     required init(){}
     
-    init(_ widgetID: Int?, _ direction: Direction){
+    // NOTE: widgetID here means the configurable value using edit widget button
+    //       but widgetKind is the kind set in when instantiating the widget configuration
+    init(_ widgetID: Int?, _ direction: Direction,  _ widgetKind: String){
         // if id was not passed in, then we assume the widget isn't customized yet
         // hence we use the common ID, if this is not present in registry of PageInfoManager
         // then it will return nil, triggering to show first page in the provider
         self.widgetID = widgetID ?? COMMON_WIDGET_ID
         self.direction = direction.rawValue
+        self.widgetKind = widgetKind
     }
     
     func perform() async throws -> some IntentResult {
-        let widgetIdString = String(widgetID)
-        DispatchQueue(label: widgetIdString).sync {
+        DispatchQueue(label: String(widgetID)).sync {
             let navigationEvent = NavigationEvent(direction: Direction(rawValue: direction))
             PageInfoManager.shared.setPageInfo(for: widgetID, value: navigationEvent)
-            WidgetCenter.shared.reloadTimelines(ofKind: widgetIdString)
+            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         }
         return .result()
     }

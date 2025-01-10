@@ -55,9 +55,9 @@ extension View
     }
 
     @ViewBuilder
-    func pageUpButton(_ widgetID: Int?) -> some View {
+    func pageUpButton(_ widgetID: Int?, _ widgetKind: String) -> some View {
         if #available(iOSApplicationExtension 17, *) {
-            Button(intent: PaginationIntent(widgetID, .up)){
+            Button(intent: PaginationIntent(widgetID, .up, widgetKind)){
                 self
             }
             .buttonStyle(.plain)
@@ -67,9 +67,9 @@ extension View
     }
 
     @ViewBuilder
-    func pageDownButton(_ widgetID: Int?) -> some View {
+    func pageDownButton(_ widgetID: Int?, _ widgetKind: String) -> some View {
         if #available(iOSApplicationExtension 17, *) {
-            Button(intent: PaginationIntent(widgetID, .down)){
+            Button(intent: PaginationIntent(widgetID, .down, widgetKind)){
                 self
             }
             .buttonStyle(.plain)
