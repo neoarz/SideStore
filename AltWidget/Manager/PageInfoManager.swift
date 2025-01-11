@@ -22,12 +22,15 @@ class PageInfoManager {
     
     func setPageInfo(forWidgetKind kind: String, forWidgetID id: Int, value: NavigationEvent?) {
         let key = getKey(forWidgetKind: kind, forWidgetID: id)
+//        UserDefaults.standard.set(value, forKey: key)
         pageInfoMap[key] = value
     }
     
     func getPageInfo(forWidgetKind kind: String, forWidgetID id: Int) -> NavigationEvent? {
         let key = getKey(forWidgetKind: kind, forWidgetID: id)
+//        return UserDefaults.standard.value(forKey: key)
         return pageInfoMap[key]
+   
     }
 
     func popPageInfo(forWidgetKind kind: String, forWidgetID id: Int) -> NavigationEvent? {
