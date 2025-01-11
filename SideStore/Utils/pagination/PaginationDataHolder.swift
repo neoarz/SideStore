@@ -18,6 +18,11 @@ public class PaginationDataHolder {
         self.currentPageindex = startPageIndex
     }
     
+    init(other: PaginationDataHolder) {
+        self.itemsPerPage = other.itemsPerPage
+        self.currentPageindex = other.currentPageindex
+    }
+    
     public enum PageLimitResult{
         case null
         case empty

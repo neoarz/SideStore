@@ -32,16 +32,23 @@ struct ActiveAppsWidget: Widget
         static let MAX_ROWS_PER_PAGE: UInt = 3
     }
     
-    let widgetKind = "ActiveApps - \(UUID().uuidString)"
-
+    private static var id: Int = 1
+    private let widgetKind: String
+    
+    init(){
+        widgetKind = "ActiveApps - \(Self.id)"
+        Self.id += 1
+    }
+    
     public var body: some WidgetConfiguration {
+        
         if #available(iOS 17, *)
         {
 
             let widgetConfig = AppIntentConfiguration(
                 kind: widgetKind,
                 intent: WidgetUpdateIntent.self,
-                provider: ActiveAppsTimelineProvider<WidgetTag>()
+                provider: ActiveAppsTimelineProvider<WidgetTag>(widgetKind: widgetKind)
             ) { entry in
                 ActiveAppsWidgetView(entry: entry, widgetKind: widgetKind)
             }
@@ -97,127 +104,104 @@ private struct ActiveAppsWidgetView: View
         GeometryReader { (geometry) in
             HStack(alignment: .center) {
                 
-                appsListView(reader: geometry)
+                let itemsPerPage = ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
+                
+                let preferredRowHeight = (geometry.size.height / Double(itemsPerPage)) - 8
+                let rowHeight = min(preferredRowHeight, geometry.size.height / 2)
+
+                LazyVStack(spacing: 12) {
+                    ForEach(Array(entry.apps.enumerated()), id: \.offset) { index, app in
+                    
+                        let icon: UIImage = app.icon ?? UIImage(named: "SideStore")!
+                        
+                        // 1024x1024 images are not supported by previews but supported by device
+                        // so we scale the image to 97% so as to reduce its actual size but not too much
+                        // to somewhere below value, acceptable by previews ie < 1042x948
+                        let scalingFactor = 0.97
+                        
+                        let resizedSize = CGSize(
+                            width:  icon.size.width * scalingFactor,
+                            height: icon.size.height * scalingFactor
+                        )
+                        
+                        let resizedIcon = icon.resizing(to: resizedSize)!
+                        let cornerRadius = rowHeight / 5.0
+                        let daysRemaining = app.expirationDate.numberOfCalendarDays(since: entry.date)
+
+                        HStack(spacing: 10) {
+                            Image(uiImage: resizedIcon)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .cornerRadius(cornerRadius)
+                            
+                            
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(app.name)
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                
+                                let text = if entry.date > app.expirationDate
+                                {
+                                    Text("Expired")
+                                }
+                                else
+                                {
+                                    Text("Expires in \(daysRemaining) ") + (daysRemaining == 1 ? Text("day") : Text("days"))
+                                }
+                                
+                                text
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Countdown(startDate: app.refreshedDate,
+                                      endDate: app.expirationDate,
+                                      currentDate: entry.date,
+                                      strokeWidth: 3.0) // Slightly thinner circle stroke width
+                            .background {
+                                Color.black.opacity(0.1)
+                                    .mask(Capsule())
+                                    .padding(.all, -5)
+                            }
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            // this modifier invalidates the view (disables user interaction and shows a blinking effect)
+                            .invalidatableContent()
+                            .activatesRefreshAllAppsIntent()
+                            
+                        }
+                        .frame(height: rowHeight)
+                    
+                    }
+                }
                 
                 Spacer(minLength: 16)
                 
-                navigationBarView()
+                let buttonWidth: CGFloat = 16
+                let widgetID = entry.context?.ID
+                
+                VStack {
+                    Image(systemName: "arrow.up")
+                        .resizable()
+                        .frame(width: buttonWidth, height: buttonWidth)
+                        .opacity(0.3)
+                        // .mask(Capsule())
+                        .pageUpButton(widgetID, widgetKind)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "arrow.down")
+                        .resizable()
+                        .frame(width: buttonWidth, height: buttonWidth)
+                        .opacity(0.3)
+                        // .mask(Capsule())
+                        .pageDownButton(widgetID, widgetKind)
+                }
+                .padding(.vertical)
                 
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-    }
-    
-    private func appsListView(reader: GeometryProxy) -> some View {
-        let itemsPerPage = ActiveAppsWidget.Constants.MAX_ROWS_PER_PAGE
-        
-        let preferredRowHeight = (reader.size.height / Double(itemsPerPage)) - 8
-        let rowHeight = min(preferredRowHeight, reader.size.height / 2)
-
-        return LazyVStack(spacing: 12) {
-            ForEach(Array(entry.apps.enumerated()), id: \.offset) { index, app in
-            
-                appEntryRowView(app: app, rowHeight: rowHeight)
-            
-            }
-        }
-    }
-    
-    
-    private func appEntryRowView(app: AppSnapshot, rowHeight: Double) -> some View {
-        let icon: UIImage = app.icon ?? UIImage(named: "SideStore")!
-        
-        // 1024x1024 images are not supported by previews but supported by device
-        // so we scale the image to 97% so as to reduce its actual size but not too much
-        // to somewhere below value, acceptable by previews ie < 1042x948
-        let scalingFactor = 0.97
-        
-        let resizedSize = CGSize(
-            width:  icon.size.width * scalingFactor,
-            height: icon.size.height * scalingFactor
-        )
-        
-        let resizedIcon = icon.resizing(to: resizedSize)!
-        let cornerRadius = rowHeight / 5.0
-        
-        return HStack(spacing: 10) {
-            Image(uiImage: resizedIcon)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .cornerRadius(cornerRadius)
-            
-            appDetailsView(app)
-            
-            Spacer()
-            
-            countDownView(app)
-            
-        }
-        .frame(height: rowHeight)
-    }
-    
-    
-    private func appDetailsView(_ app: AppSnapshot) -> some View {
-        let daysRemaining = app.expirationDate.numberOfCalendarDays(since: entry.date)
-
-        return VStack(alignment: .leading, spacing: 1) {
-            Text(app.name)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-            
-            let text = if entry.date > app.expirationDate
-            {
-                Text("Expired")
-            }
-            else
-            {
-                Text("Expires in \(daysRemaining) ") + (daysRemaining == 1 ? Text("day") : Text("days"))
-            }
-            
-            text
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-        }
-    }
-    
-    private func countDownView(_ app: AppSnapshot) -> some View {
-        Countdown(startDate: app.refreshedDate,
-                  endDate: app.expirationDate,
-                  currentDate: entry.date,
-                  strokeWidth: 3.0) // Slightly thinner circle stroke width
-        .background {
-            Color.black.opacity(0.1)
-                .mask(Capsule())
-                .padding(.all, -5)
-        }
-        .font(.system(size: 16, weight: .semibold, design: .rounded))
-        // this modifier invalidates the view (disables user interaction and shows a blinking effect)
-        .invalidatableContent()
-        .activatesRefreshAllAppsIntent()
-
-    }
-    
-    private func navigationBarView() -> some View {
-        let buttonWidth: CGFloat = 16
-        let widgetID = entry.context?.ID
-        
-        return VStack {
-            Image(systemName: "arrow.up")
-                .resizable()
-                .frame(width: buttonWidth, height: buttonWidth)
-                .opacity(0.3)
-                // .mask(Capsule())
-                .pageUpButton(widgetID, widgetKind)
-            
-            Spacer()
-            
-            Image(systemName: "arrow.down")
-                .resizable()
-                .frame(width: buttonWidth, height: buttonWidth)
-                .opacity(0.3)
-                // .mask(Capsule())
-                .pageDownButton(widgetID, widgetKind)
-        }
-        .padding(.vertical)
     }
     
     private var placeholder: some View {

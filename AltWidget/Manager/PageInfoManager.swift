@@ -6,22 +6,32 @@
 //  Copyright © 2025 SideStore. All rights reserved.
 //
 
-// This is a utility class
+import Foundation
+
+// TODO: See if we can persist these values instead of keeping in memory to prevent memory leaks
+//       Possible ways: Userdefaults.standard - set/get ?
 class PageInfoManager {
     static var shared = PageInfoManager()
-    private var pageInfoMap: [Int: NavigationEvent] = [:]
+    private var pageInfoMap: [String: NavigationEvent] = [:]
     
     private init() {}
     
-    func setPageInfo(for key: Int, value: NavigationEvent?) {
+    private func getKey(forWidgetKind kind: String, forWidgetID id: Int) -> String{
+        return "\(kind)@\(id)"
+    }
+    
+    func setPageInfo(forWidgetKind kind: String, forWidgetID id: Int, value: NavigationEvent?) {
+        let key = getKey(forWidgetKind: kind, forWidgetID: id)
         pageInfoMap[key] = value
     }
     
-    func getPageInfo(for key: Int) -> NavigationEvent? {
-       return pageInfoMap[key]
+    func getPageInfo(forWidgetKind kind: String, forWidgetID id: Int) -> NavigationEvent? {
+        let key = getKey(forWidgetKind: kind, forWidgetID: id)
+        return pageInfoMap[key]
     }
 
-    func popPageInfo(for key: Int) -> NavigationEvent? {
+    func popPageInfo(forWidgetKind kind: String, forWidgetID id: Int) -> NavigationEvent? {
+        let key = getKey(forWidgetKind: kind, forWidgetID: id)
         return pageInfoMap.removeValue(forKey: key)
     }
 

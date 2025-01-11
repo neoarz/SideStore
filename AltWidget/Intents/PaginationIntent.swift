@@ -18,13 +18,12 @@ public enum Direction: String, Sendable{
 public struct NavigationEvent {
     let direction: Direction?
     var consumed: Bool = false
+    var dataHolder: PaginationDataHolder?
 }
 
 @available(iOS 17, *)
 class PaginationIntent: AppIntent, @unchecked Sendable {
-    
-    private let COMMON_WIDGET_ID = 1
-    
+        
     static var title: LocalizedStringResource = "Page Navigation Intent"
     static var isDiscoverable: Bool = false
     
@@ -45,17 +44,28 @@ class PaginationIntent: AppIntent, @unchecked Sendable {
         // if id was not passed in, then we assume the widget isn't customized yet
         // hence we use the common ID, if this is not present in registry of PageInfoManager
         // then it will return nil, triggering to show first page in the provider
-        self.widgetID = widgetID ?? COMMON_WIDGET_ID
+        self.widgetID = widgetID ?? WidgetUpdateIntent.COMMON_WIDGET_ID
         self.direction = direction.rawValue
         self.widgetKind = widgetKind
     }
     
     func perform() async throws -> some IntentResult {
+        // Post the navigation event into the shared db (Dictionary) and ask to reload
         DispatchQueue(label: String(widgetID)).sync {
-            let navigationEvent = NavigationEvent(direction: Direction(rawValue: direction))
-            PageInfoManager.shared.setPageInfo(for: widgetID, value: navigationEvent)
+            self.postThisNavigationEvent()
             WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         }
         return .result()
+    }
+    
+    private func postThisNavigationEvent(){
+        // re-use an existing event if available and update only required parts
+        let navEvent = PageInfoManager.shared.getPageInfo(forWidgetKind: widgetKind, forWidgetID: widgetID)
+        let navigationEvent = NavigationEvent(
+            direction: Direction(rawValue: direction),
+            consumed: false,    // event is never consumed at origin :D
+            dataHolder: navEvent?.dataHolder ?? nil
+        )
+        PageInfoManager.shared.setPageInfo(forWidgetKind: widgetKind, forWidgetID: widgetID, value: navigationEvent)
     }
 }
