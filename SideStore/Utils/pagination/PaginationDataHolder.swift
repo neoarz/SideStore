@@ -77,7 +77,13 @@ public class PaginationDataHolder {
         let count = UInt(items.count)
         
         if(count == 0) { return items }
-            
+        
+        // since we operate on any input items list at any time,
+        // we set currentPageIndex as last availablePage if out of bounds
+        let availablePages = UInt(ceil(Double(count) / Double(itemsPerPage)))
+        
+        self.currentPageindex = min(availablePages-1, currentPageindex)
+
         let startIndex = currentPageindex * itemsPerPage
         let estimatedEndIndex = startIndex + (itemsPerPage-1)
         let endIndex: UInt = min(count-1, estimatedEndIndex)
