@@ -165,10 +165,10 @@ private struct ActiveAppsWidgetView: View
                                     .padding(.all, -5)
                             }
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .activatesRefreshAllAppsIntent()
                             // this modifier invalidates the view (disables user interaction and shows a blinking effect)
                             .invalidatableContent()
-                            .activatesRefreshAllAppsIntent()
-                            
+
                         }
                         .frame(height: rowHeight)
                     
