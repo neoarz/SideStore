@@ -101,9 +101,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         
         UserDefaults.standard.preferredServerID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.serverID) as? String
         
-//        #if DEBUG || BETA
+        #if DEBUG && (targetEnvironment(simulator) || BETA)
         UserDefaults.standard.isDebugModeEnabled = true
-//        #endif
+        #endif
         
         self.prepareForBackgroundFetch()
         
