@@ -209,9 +209,27 @@ private extension SettingsViewController
         let BUILD_REVISION = "CFBundleRevision"     // commit ID for now (but could be any, set by build env vars
         let CURRENT_PROJECT_VERSION = kCFBundleVersionKey as String
         
-        let XCODE_VERSION = "DTXcode"
-        let XCODE_REVISION = "DTXcodeBuild"
+        func getXcodeVersion() -> String {
+            let XCODE_VERSION = "DTXcode"
+            let XCODE_REVISION = "DTXcodeBuild"
 
+            let xcode = Bundle.main.object(forInfoDictionaryKey: XCODE_VERSION) as? String
+            let build = Bundle.main.object(forInfoDictionaryKey: XCODE_REVISION) as? String
+            
+            var xcodeVersion = xcode.map { version in
+//                " - Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
+                "Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
+            } ?? ""
+
+            if let pairing = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String,
+                pairing != "<insert pairing file here>"{
+                xcodeVersion += " - true"
+            }
+            return xcodeVersion
+        }
+
+        var versionLabel: String = ""
+        
         if let installedApp = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
         {
             #if BETA
@@ -219,40 +237,37 @@ private extension SettingsViewController
             let bundleVersion: String? = Bundle.main.object(forInfoDictionaryKey: CURRENT_PROJECT_VERSION) as? String
             let buildRevision: String? = Bundle.main.object(forInfoDictionaryKey: BUILD_REVISION) as? String
             
-            let localizedVersion = bundleVersion.map { version in
+            var localizedVersion = bundleVersion.map { version in
                 "\(installedApp.version) (\(version))" + (buildRevision.map { revision in " - \(revision)" } ?? "")       // Ex: "0.6.0 (0600) - 1acdef3"
             } ?? installedApp.localizedVersion
             
             #else
-            let localizedVersion = installedApp.version
+            var localizedVersion = installedApp.version
             #endif
-            
-            return NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
+                        
+            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
         }
         else if let version = Bundle.main.object(forInfoDictionaryKey: MARKETING_VERSION_KEY) as? String
         {
             var version = "SideStore \(version)"
-                        
-            let xcode = Bundle.main.object(forInfoDictionaryKey: XCODE_VERSION) as? String
-            let build = Bundle.main.object(forInfoDictionaryKey: XCODE_REVISION) as? String
             
-            version += xcode.map { version in
-                " - Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
-            } ?? ""
-
-            if let pairing = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String,
-                pairing != "<insert pairing file here>"{
-                version += " - true"
-            }
+            version += getXcodeVersion()
             
-            return NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
         }
         else
         {
             var version = "SideStore\t"
             version += "\n\(Bundle.Info.appbundleIdentifier)"
-            return NSLocalizedString(version, comment: "SideStore Version")
+            versionLabel = NSLocalizedString(version, comment: "SideStore Version")
         }
+        
+        // add xcode build version if in debug mode
+        #if DEBUG
+        versionLabel += "\n\(getXcodeVersion())"
+        #endif
+
+        return versionLabel
     }
     
     
