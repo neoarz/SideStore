@@ -198,7 +198,9 @@ print_release_type:
 #       using scheme = Debug and config = Release (so I have kept it as-is) 
 # BUILD_CONFIG := "Debug"				# switched to debug build-config to diagnose issue since debugger won't resolve breakpoints in release
 # BUILD_CONFIG := "Release"
-BUILD_CONFIG ?= Release					# switched back to release build as default config, unless specified by the incoming environment vars
+
+# switched back to release build as default config, unless specified by the incoming environment vars
+BUILD_CONFIG ?= Release
 build: print_release_type
 	@echo ">>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<"
 	@echo ""
