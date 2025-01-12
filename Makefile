@@ -1,3 +1,5 @@
+default: build			# default target for the "make" command
+
 SHELL := /bin/bash
 .PHONY: help ios update tvos
 
@@ -156,23 +158,32 @@ test:
 
 ## -- Building --
 
-# Fetch the latest commit ID globally
-ALPHA_COMMIT_ID := $(if $(IS_ALPHA),$(shell git rev-parse --short HEAD),)
+IS_ALPHA_TRUE := $(filter true TRUE 1, $(IS_ALPHA))
+IS_BETA_TRUE := $(filter true TRUE 1, $(IS_BETA))
 
-# Print release type based on the presence of ALPHA_COMMIT_ID
+# Fetch the latest commit ID for ALPHA or BETA builds
+COMMIT_ID := $(if $(or $(IS_ALPHA_TRUE),$(IS_BETA_TRUE)),$(shell git rev-parse --short HEAD),)
+
+# Print release type based on the value of IS_ALPHA or IS_BETA
 print_release_type:
 	@echo ""
-	@if [ -n "$(IS_ALPHA)" ]; then \
-		echo "'IS_ALPHA' is defined. Fetched the latest commit ID from HEAD..."; \
-		echo "    Commit ID: $(ALPHA_COMMIT_ID)"; \
+	@if [ "$(filter true TRUE 1,$(IS_ALPHA))" ]; then \
+		echo "'IS_ALPHA' is set to true. Fetched the latest commit ID from HEAD..."; \
+		echo "    Commit ID: $(COMMIT_ID)"; \
 		echo ""; \
-		echo ">>>>>>>> This is now a ALPHA release for COMMIT_ID = '$(ALPHA_COMMIT_ID)' <<<<<<<<<"; \
-		echo "    Building with BUILD_REVISION = '$(ALPHA_COMMIT_ID)'"; \
+		echo ">>>>>>>> This is now an ALPHA release for COMMIT_ID = '$(COMMIT_ID)' <<<<<<<<<"; \
+		echo "    Building with BUILD_REVISION = '$(COMMIT_ID)'"; \
+	elif [ "$(filter true TRUE 1,$(IS_BETA))" ]; then \
+		echo "'IS_BETA' is set to true. Fetched the latest commit ID from HEAD..."; \
+		echo "    Commit ID: $(COMMIT_ID)"; \
+		echo ""; \
+		echo ">>>>>>>> This is now a BETA release for COMMIT_ID = '$(COMMIT_ID)' <<<<<<<<<"; \
+		echo "    Building with BUILD_REVISION = '$(COMMIT_ID)'"; \
 	else \
-		echo "'IS_ALPHA' is not defined. Skipping commit ID fetch."; \
+		echo "'IS_ALPHA' and 'IS_BETA' are not set to true. Skipping commit ID fetch."; \
 		echo ""; \
-		echo ">>>>>>>> This is now a STABLE release because IS_ALPHA was NOT SET <<<<<<<<<"; \
-		echo "    Building with BUILD_REVISION = '$(ALPHA_COMMIT_ID)'"; \
+		echo ">>>>>>>> This is now a STABLE release because neither IS_ALPHA nor IS_BETA was true <<<<<<<<<"; \
+		echo "    Building with BUILD_REVISION = '$(COMMIT_ID)'"; \
 		echo ""; \
 	fi
 	@echo ""
@@ -185,9 +196,12 @@ print_release_type:
 #
 #       However the scheme used is Debug Scheme, so it was deliberately 
 #       using scheme = Debug and config = Release (so I have kept it as-is) 
-BUILD_CONFIG := "Debug"				# switched to debug build-config to diagnose issue since debugger won't resolve breakpoints in release
+# BUILD_CONFIG := "Debug"				# switched to debug build-config to diagnose issue since debugger won't resolve breakpoints in release
 # BUILD_CONFIG := "Release"
+BUILD_CONFIG ?= Release					# switched back to release build as default config, unless specified by the incoming environment vars
 build: print_release_type
+	@echo ">>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<"
+	@echo ""
 	@xcodebuild -workspace AltStore.xcworkspace \
 				-scheme SideStore \
 				-sdk iphoneos \
