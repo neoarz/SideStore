@@ -135,14 +135,40 @@ jobs:
 
         
       - name: Build SideStore
-        run: NSUnbufferedIO=YES make build 2>&1 | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
+        # using 'tee' to intercept stdout and log for detailed build-log
+        run: |
+          NSUnbufferedIO=YES make build 2>&1 | tee build.log | xcbeautify --renderer github-actions && exit ${PIPESTATUS[0]}
 
       - name: Fakesign app
-        run: make fakesign
+        run: make fakesign | tee -a build.log
 
       - name: Convert to IPA
-        run: make ipa
+        run: make ipa | tee -a build.log
 
+      - name: Encrypt build.log generated from SideStore build for upload
+        run: |
+          DEFAULT_BUILD_LOG_PASSWORD=12345
+
+          BUILD_LOG_ZIP_PASSWORD=${{ secrets.APPS_DEPLOY_KEY }}
+          BUILD_LOG_ZIP_PASSWORD=${BUILD_LOG_ZIP_PASSWORD:-$DEFAULT_BUILD_LOG_PASSWORD}
+
+          if [ "$BUILD_LOG_ZIP_PASSWORD" == "$DEFAULT_BUILD_LOG_PASSWORD" ]; then
+            echo "Warning: BUILD_LOG_ZIP_PASSWORD is not set. Defaulting to '${DEFAULT_BUILD_LOG_PASSWORD}'."
+          fi 
+
+          if [ ! -f build.log ]; then
+            echo "Warning: build.log is missing, creating a dummy log..."
+            echo "Error: build.log was missing, This is a dummy placeholder file..." > build.log
+          fi
+          
+          zip -e -P "$BUILD_LOG_ZIP_PASSWORD" encrypted-build_log.zip build.log
+
+      - name: List Files after SideStore build
+        run: |
+          echo ">>>>>>>>> Workdir <<<<<<<<<<"
+          ls -la .
+          echo ""
+  
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%c')" >> $GITHUB_OUTPUT
@@ -161,7 +187,7 @@ jobs:
           release: "Nightly"
           tag: "nightly"
           prerelease: true
-          files: SideStore.ipa SideStore.dSYMs.zip
+          files: SideStore.ipa SideStore.dSYMs.zip encrypted-build_log.zip
           body: |
               This is an ⚠️ **EXPERIMENTAL** ⚠️ nightly build for commit [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
               
@@ -190,6 +216,12 @@ jobs:
         with:
           name: SideStore-${{ steps.version.outputs.version }}-dSYM
           path: ./SideStore.xcarchive/dSYMs/*
+
+      - name: Upload encrypted-build_log.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-build_log.zip
+          path: encrypted-build_log.zip
 
       # Check if PUBLISH_BETA_UPDATES secret is set to non-zero
       - name: Check if PUBLISH_BETA_UPDATES is set
