@@ -64,6 +64,7 @@
 		A859ED5C2D1EE827003DCC58 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; };
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868CFE32D319988002F1201 /* SingletonGenericMap.swift */; };
+		A8696EE42D34512C00E96389 /* RemoveAppExtensionsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
 		A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */; };
@@ -645,6 +646,7 @@
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
 		A868CFE32D319988002F1201 /* SingletonGenericMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingletonGenericMap.swift; sourceTree = "<group>"; };
+		A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveAppExtensionsOperation.swift; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppsTimelineProvider.swift; sourceTree = "<group>"; };
 		A8AD35582D31BF29003A28B4 /* PageInfoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageInfoManager.swift; sourceTree = "<group>"; };
@@ -2039,6 +2041,7 @@
 				D5E1E7C028077DE90016FC96 /* UpdateKnownSourcesOperation.swift */,
 				D5ACE84428E3B8450021CAB9 /* ClearAppCacheOperation.swift */,
 				D561AF812B21669400BF59C6 /* VerifyAppPledgeOperation.swift */,
+				A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */,
 				BF7B44062725A4B8005288A4 /* Patch App */,
 			);
 			path = Operations;
@@ -2988,6 +2991,7 @@
 				BFD2478F2284C8F900981D42 /* Button.swift in Sources */,
 				D5151BE12A90344300C96F28 /* RefreshAllAppsWidgetIntent.swift in Sources */,
 				D513F6162A12CE4E0061EAA1 /* SourceError.swift in Sources */,
+				A8696EE42D34512C00E96389 /* RemoveAppExtensionsOperation.swift in Sources */,
 				BF56D2AC23DF8E170006506D /* FetchAppIDsOperation.swift in Sources */,
 				BFC1F38D22AEE3A4003AC21A /* DownloadAppOperation.swift in Sources */,
 				BFE6073A231ADF82002B0E8E /* SettingsViewController.swift in Sources */,
