@@ -244,13 +244,14 @@ private extension ResignAppOperation
                 {
                     for case let fileURL as URL in enumerator
                     {
-//                        #if DEBUG
-//                        guard !fileURL.lastPathComponent.lowercased().contains(".xctest") else {
-//                            // Remove embedded XCTest (+ dSYM) bundle from copied app bundle.
-//                            try FileManager.default.removeItem(at: fileURL)
-//                            continue
-//                        }
-//                        #endif
+                        // for both sim and device, in debug mode builds, remove the tests bundles (if any)
+                        #if DEBUG
+                        guard !fileURL.lastPathComponent.lowercased().contains(".xctest") else {
+                            // Remove embedded XCTest (+ dSYM) bundle from copied app bundle.
+                            try FileManager.default.removeItem(at: fileURL)
+                            continue
+                        }
+                        #endif
                         
                         guard let appExtension = Bundle(url: fileURL) else { throw ALTError(.missingAppBundle) }
                         try prepare(appExtension)

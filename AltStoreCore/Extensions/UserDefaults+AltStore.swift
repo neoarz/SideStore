@@ -107,6 +107,7 @@ public extension UserDefaults
         (ProcessInfo.processInfo.isOperatingSystemAtLeast(ios14) && !ProcessInfo.processInfo.isOperatingSystemAtLeast(ios15_7_2)) ||
         (ProcessInfo.processInfo.isOperatingSystemAtLeast(ios16) && !ProcessInfo.processInfo.isOperatingSystemAtLeast(ios16_2))
         
+        // TODO: @mahee96: why should the permissions checking be any different, for now, it shouldn't so commented debug mode code
 //        #if DEBUG
 //        let permissionCheckingDisabled = true
 //        #else

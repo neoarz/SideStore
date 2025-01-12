@@ -87,21 +87,22 @@ public extension DatabaseManager
             
             guard !self.isStarted else { return finish(nil) }
             
-//            #if DEBUG
-//            // Wrap in #if DEBUG to *ensure* we never accidentally delete production databases.
-//            if ProcessInfo.processInfo.isPreview
-//            {
-//                do
-//                {
-//                    print("!!! Purging database for preview...")
-//                    try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
-//                }
-//                catch
-//                {
-//                    print("Failed to remove database directory for preview.", error)
-//                }
-//            }
-//            #endif
+            // In simulator, when previews are generated, it initializes the db, in doing so this removal may be required
+            #if DEBUG && targetEnvironment(simulator)
+            // Wrap in #if DEBUG to *ensure* we never accidentally delete production databases.
+            if ProcessInfo.processInfo.isPreview
+            {
+                do
+                {
+                    print("!!! Purging database for preview...")
+                    try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
+                }
+                catch
+                {
+                    print("Failed to remove database directory for preview.", error)
+                }
+            }
+            #endif
             
             if self.persistentContainer.isMigrationRequired
             {
@@ -354,11 +355,12 @@ private extension DatabaseManager
             
             let fileURL = installedApp.fileURL
             
-//            #if DEBUG
-//            let replaceCachedApp = true
-//            #else
+            // @mahee96: it shouldn't matter if it is debug/release, the file is expected to be in its place (except for simulator probably coz it doesn't suppor app installs anyway)
+            #if DEBUG && targetEnvironment(simulator)
+            let replaceCachedApp = true
+            #else
             let replaceCachedApp = !FileManager.default.fileExists(atPath: fileURL.path) || installedApp.version != localApp.version || installedApp.buildVersion != localApp.buildVersion
-//            #endif
+            #endif
             
             if replaceCachedApp
             {

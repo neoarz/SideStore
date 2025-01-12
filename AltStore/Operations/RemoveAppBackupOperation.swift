@@ -58,6 +58,7 @@ final class RemoveAppBackupOperation: ResultOperation<Void>
                 }
                 catch let error as CocoaError where error.code == CocoaError.Code.fileNoSuchFile
                 {
+                    // TODO: @mahee96: Find out why should in debug builds the app-groups is not expected to match
 //                    #if DEBUG
 //                    
 //                    // When debugging, it's expected that app groups don't match, so ignore.

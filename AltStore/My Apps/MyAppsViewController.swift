@@ -1930,11 +1930,12 @@ extension MyAppsViewController
                 var outError: NSError? = nil
                 
                 self.coordinator.coordinate(readingItemAt: backupDirectoryURL, options: [.withoutChanges], error: &outError) { (backupDirectoryURL) in
-//                    #if DEBUG
-//                    backupExists = true
-//                    #else
+
+                    #if DEBUG && targetEnvironment(simulator)
+                    backupExists = true
+                    #else
                     backupExists = FileManager.default.fileExists(atPath: backupDirectoryURL.path)
-//                    #endif
+                    #endif
                 }
                 
                 if backupExists
@@ -1965,13 +1966,12 @@ extension MyAppsViewController
             }
             
             
-//            #if DEBUG
-//            if installedApp.bundleIdentifier != StoreApp.altstoreAppID
-//            {
-//                actions.append(removeAction)
-//            }
-//            
-//            #else
+            #if DEBUG && targetEnvironment(simulator)
+            if installedApp.bundleIdentifier != StoreApp.altstoreAppID
+            {
+                actions.append(removeAction)
+            }
+            #else
             
             if (UserDefaults.standard.legacySideloadedApps ?? []).contains(installedApp.bundleIdentifier)
             {
@@ -1985,7 +1985,7 @@ extension MyAppsViewController
                 actions.append(removeAction)
             }
             
-//            #endif
+            #endif
         }
         
         // Change the order of entries to make changes to how the context menu is displayed

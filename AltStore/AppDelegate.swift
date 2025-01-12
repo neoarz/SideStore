@@ -294,9 +294,9 @@ extension AppDelegate
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { (success, error) in
         }
         
-//        #if DEBUG
-//        UIApplication.shared.registerForRemoteNotifications()
-//        #endif
+        #if DEBUG && targetEnvironment(simulator)
+        UIApplication.shared.registerForRemoteNotifications()
+        #endif
     }
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data)

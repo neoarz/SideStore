@@ -134,19 +134,21 @@ extension FetchProvisioningProfilesOperation
                 // or if installedApp.team is nil but resignedBundleIdentifier contains the team's identifier.
                 let teamsMatch = installedApp.team?.identifier == team.identifier || (installedApp.team == nil && installedApp.resignedBundleIdentifier.contains(team.identifier))
                 
-//                #if DEBUG
-//
-//                if app.isAltStoreApp
-//                {
-//                    // Use legacy bundle ID format for AltStore.
-//                    preferredBundleID = teamsMatch ? installedApp.resignedBundleIdentifier : nil
-//                }
-//                else
-//                {
-//                    preferredBundleID = teamsMatch ? installedApp.resignedBundleIdentifier : nil
-//                }
-//
-//                #else
+                // TODO: @mahee96: Try to keep the debug build and release build operations similar, refactor later with proper reasoning
+                //                 for now, restricted it to debug on simulator only
+                #if DEBUG && targetEnvironment(simulator)
+
+                if app.isAltStoreApp
+                {
+                    // Use legacy bundle ID format for AltStore.
+                    preferredBundleID = teamsMatch ? installedApp.resignedBundleIdentifier : nil
+                }
+                else
+                {
+                    preferredBundleID = teamsMatch ? installedApp.resignedBundleIdentifier : nil
+                }
+
+                #else
                 
                 if teamsMatch
                 {
@@ -160,7 +162,7 @@ extension FetchProvisioningProfilesOperation
                     preferredBundleID = nil
                 }
                 
-               // #endif
+                #endif
             }
             else
             {
