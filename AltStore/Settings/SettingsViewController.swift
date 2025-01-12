@@ -27,7 +27,9 @@ extension SettingsViewController
         case instructions
         case techyThings
         case credits
-        case debug
+        case advancedSettings
+        // diagnostics section, will be enabled on release builds only on swipe down with 3 fingers 3 times
+        case diagnostics
         // case macDirtyCow
     }
     
@@ -35,14 +37,11 @@ extension SettingsViewController
     {
         case backgroundRefresh
         case noIdleTimeout        
-        @available(iOS 14, *)
         case addToSiri
         case disableAppLimit
         
         static var allCases: [AppRefreshRow] {
-            var c: [AppRefreshRow] = [.backgroundRefresh, .noIdleTimeout]
-            guard #available(iOS 14, *) else { return c }
-            c.append(.addToSiri)
+            var c: [AppRefreshRow] = [.backgroundRefresh, .noIdleTimeout, .addToSiri]
 
             // conditional entries go at the last to preserve ordering
             if !ProcessInfo().sparseRestorePatched { c.append(.disableAppLimit) }
@@ -64,19 +63,23 @@ extension SettingsViewController
         case clearCache
     }
     
-    fileprivate enum DebugRow: Int, CaseIterable
+    fileprivate enum AdvancedSettingsRow: Int, CaseIterable
     {
         case sendFeedback
         case refreshAttempts
         case refreshSideJITServer
         case resetPairingFile
         case anisetteServers
-        case responseCaching
         case betaUpdates
+//        case hiddenSettings
+    }
+
+    fileprivate enum DiagnosticsRow: Int, CaseIterable
+    {
+        case responseCaching
         case exportResignedApp
         case verboseOperationsLogging
         case exportSqliteDB
-//        case advancedSettings
     }
 }
 
@@ -132,53 +135,15 @@ final class SettingsViewController: UITableViewController
         self.prototypeHeaderFooterView = nib.instantiate(withOwner: nil, options: nil)[0] as? SettingsHeaderFooterView
         
         self.tableView.register(nib, forHeaderFooterViewReuseIdentifier: "HeaderFooterView")
-                
-       let debugModeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(SettingsViewController.handleDebugModeGesture(_:)))
-       debugModeGestureRecognizer.delegate = self
-       debugModeGestureRecognizer.direction = .up
-       debugModeGestureRecognizer.numberOfTouchesRequired = 3
-       self.tableView.addGestureRecognizer(debugModeGestureRecognizer)
-
-        var versionString: String = ""
-        if let installedApp = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
-        {
-            #if BETA
-            // Only show build version for BETA builds.
-            let localizedVersion = if let bundleVersion = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String {
-                "\(installedApp.version) (\(bundleVersion))"
-            } else {
-                installedApp.localizedVersion
-            }
-            #else
-            let localizedVersion = installedApp.version
-            #endif
-            
-            self.versionLabel.text = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
-        }
-        else if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        {
-            versionString += "SideStore \(version)"
-            if let xcode = Bundle.main.object(forInfoDictionaryKey: "DTXcode") as? String {
-                versionString += " - Xcode \(xcode) - "
-                if let build = Bundle.main.object(forInfoDictionaryKey: "DTXcodeBuild") as? String {
-                    versionString += "\(build)"
-                }
-            }
-            if let pairing = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String {
-                let pair_test = pairing == "<insert pairing file here>"
-                if !pair_test {
-                    versionString += " - \(!pair_test)"
-                }
-            }
-            self.versionLabel.text = NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
-        }
-        else
-        {
-            self.versionLabel.text = nil
-            versionString += "SideStore\t"
-            versionString += "\n\(Bundle.Info.appbundleIdentifier)"
-            self.versionLabel.text = NSLocalizedString(versionString, comment: "SideStore Version")
-        }
+        
+        let debugModeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(SettingsViewController.handleDebugModeGesture(_:)))
+        debugModeGestureRecognizer.delegate = self
+        debugModeGestureRecognizer.direction = .up
+        debugModeGestureRecognizer.numberOfTouchesRequired = 3
+        self.tableView.addGestureRecognizer(debugModeGestureRecognizer)
+        
+        // set the version label to show in settings screen
+        self.versionLabel.text = getVersionLabel()
         
         self.versionLabel.numberOfLines = 0
         self.versionLabel.lineBreakMode = .byWordWrapping
@@ -238,6 +203,59 @@ final class SettingsViewController: UITableViewController
 
 private extension SettingsViewController
 {
+    
+    private func getVersionLabel() -> String {
+        let MARKETING_VERSION_KEY = "CFBundleShortVersionString"
+        let BUILD_REVISION = "CFBundleRevision"     // commit ID for now (but could be any, set by build env vars
+        let CURRENT_PROJECT_VERSION = kCFBundleVersionKey as String
+        
+        let XCODE_VERSION = "DTXcode"
+        let XCODE_REVISION = "DTXcodeBuild"
+
+        if let installedApp = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
+        {
+            #if BETA
+            // Only show build version (and build revision) for BETA builds.
+            let bundleVersion: String? = Bundle.main.object(forInfoDictionaryKey: CURRENT_PROJECT_VERSION) as? String
+            let buildRevision: String? = Bundle.main.object(forInfoDictionaryKey: BUILD_REVISION) as? String
+            
+            let localizedVersion = bundleVersion.map { version in
+                "\(installedApp.version) (\(version))" + (buildRevision.map { revision in " - \(revision)" } ?? "")       // Ex: "0.6.0 (0600) - 1acdef3"
+            } ?? installedApp.localizedVersion
+            
+            #else
+            let localizedVersion = installedApp.version
+            #endif
+            
+            return NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
+        }
+        else if let version = Bundle.main.object(forInfoDictionaryKey: MARKETING_VERSION_KEY) as? String
+        {
+            var version = "SideStore \(version)"
+                        
+            let xcode = Bundle.main.object(forInfoDictionaryKey: XCODE_VERSION) as? String
+            let build = Bundle.main.object(forInfoDictionaryKey: XCODE_REVISION) as? String
+            
+            version += xcode.map { version in
+                " - Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
+            } ?? ""
+
+            if let pairing = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String,
+                pairing != "<insert pairing file here>"{
+                version += " - true"
+            }
+            
+            return NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
+        }
+        else
+        {
+            var version = "SideStore\t"
+            version += "\n\(Bundle.Info.appbundleIdentifier)"
+            return NSLocalizedString(version, comment: "SideStore Version")
+        }
+    }
+    
+    
     func update()
     {
         if let team = DatabaseManager.shared.activeTeam()
@@ -253,11 +271,16 @@ private extension SettingsViewController
             self.activeTeam = nil
         }
         
+        // AppRefreshRow
         self.backgroundRefreshSwitch.isOn = UserDefaults.standard.isBackgroundRefreshEnabled
         self.noIdleTimeoutSwitch.isOn = UserDefaults.standard.isIdleTimeoutDisableEnabled
         self.disableAppLimitSwitch.isOn = UserDefaults.standard.isAppLimitDisabled
-        self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
+
+        // AdvancedSettingsRow
         self.betaUpdatesSwitch.isOn = UserDefaults.standard.isBetaUpdatesEnabled
+
+        // DiagnosticsRow
+        self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         self.exportResignedAppsSwitch.isOn = UserDefaults.standard.isExportResignedAppEnabled
         self.verboseOperationsLoggingSwitch.isOn = UserDefaults.standard.isVerboseOperationsLoggingEnabled
 
@@ -341,6 +364,12 @@ private extension SettingsViewController
         case .credits:
             settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("CREDITS", comment: "")
             
+        case .advancedSettings:
+            settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("ADVANCED SETTINGS", comment: "")
+
+        case .diagnostics:
+            settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("DIAGNOSTICS", comment: "")
+            
         // case .macDirtyCow:
         //     if isHeader
         //     {
@@ -351,8 +380,6 @@ private extension SettingsViewController
         //         settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("If you've removed the 3-sideloaded app limit via the MacDirtyCow exploit, disable this setting to sideload more than 3 apps at a time.", comment: "")
         //     }
             
-        case .debug:
-            settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("DEBUG", comment: "")
         }
     }
     
@@ -432,6 +459,9 @@ private extension SettingsViewController
     
     @IBAction func toggleDisableAppLimit(_ sender: UISwitch) {
         UserDefaults.standard.isAppLimitDisabled = sender.isOn
+        
+        // TODO: Here we force reload the activeAppsLimit after detecting change in isAppLimitDisabled
+        //       Why do we need to do this, once identified if this is intentional and working as expected, remove this todo
         if UserDefaults.standard.activeAppsLimit != nil
         {
             UserDefaults.standard.activeAppsLimit = InstalledApp.freeAccountActiveAppsLimit
@@ -468,7 +498,7 @@ private extension SettingsViewController
         UserDefaults.standard.responseCachingDisabled = sender.isOn
     }
     
-    @IBAction func addRefreshAppsShortcut()
+    func addRefreshAppsShortcut()
     {
         guard let shortcut = INShortcut(intent: INInteraction.refreshAllApps().intent) else { return }
         
@@ -690,8 +720,7 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return nil
         case .signIn where self.activeTeam != nil: return nil
         case .account where self.activeTeam == nil: return nil
-        // case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .debug:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .advancedSettings, .diagnostics /* ,.macDirtyCow */:
             let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: "HeaderFooterView") as! SettingsHeaderFooterView
             self.prepare(headerView, for: section, isHeader: true)
             return headerView
@@ -713,7 +742,7 @@ extension SettingsViewController
             self.prepare(footerView, for: section, isHeader: false)
             return footerView
             
-        case .account, .credits, .debug, .instructions: return nil
+        case .account, .credits, .advancedSettings, .instructions, .diagnostics: return nil
         }
     }
 
@@ -725,8 +754,8 @@ extension SettingsViewController
         case _ where isSectionHidden(section): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0
-        // case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .debug:
-        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .debug:
+        // case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .macDirtyCow, .advanced:
+        case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .advancedSettings, .diagnostics:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: true)
             return height
             
@@ -743,11 +772,11 @@ extension SettingsViewController
         case .signIn where self.activeTeam != nil: return 1.0
         case .account where self.activeTeam == nil: return 1.0            
         // case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
-        case .signIn, .patreon, .display, .appRefresh, .techyThings:
+        case .signIn, .patreon, .display, .appRefresh, .techyThings, .diagnostics:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: section, isHeader: false)
             return height
             
-        case .account, .credits, .debug, .instructions: return 0.0
+        case .account, .credits, .advancedSettings, .instructions: return 0.0
         }
     }
 }
@@ -768,7 +797,7 @@ extension SettingsViewController
             case .noIdleTimeout: break
             case .disableAppLimit: break
             case .addToSiri:
-                guard #available(iOS 14, *) else { return }
+//                guard #available(iOS 14, *) else { return }   // our min deployment is iOS 15 now :) so commented out
                 self.addRefreshAppsShortcut()
             }
             
@@ -795,8 +824,8 @@ extension SettingsViewController
                 self.tableView.deselectRow(at: selectedIndexPath, animated: true)
             }
             
-        case .debug:
-            let row = DebugRow.allCases[indexPath.row]
+        case .advancedSettings:
+            let row = AdvancedSettingsRow.allCases[indexPath.row]
             switch row
             {
             case .sendFeedback:
@@ -1006,6 +1035,22 @@ extension SettingsViewController
 
                 self.prepare(for: UIStoryboardSegue(identifier: "anisetteServers", source: self, destination: anisetteServersController), sender: nil)
                 
+//            case .hiddenSettings:
+//                // Create the URL that deep links to your app's custom settings.
+//                if let url = URL(string: UIApplication.openSettingsURLString) {
+//                    // Ask the system to open that URL.
+//                    UIApplication.shared.open(url)
+//                } else {
+//                    ELOG("UIApplication.openSettingsURLString invalid")
+//                }
+            case .refreshAttempts, .betaUpdates : break
+
+            }
+        
+        case .diagnostics:
+            let row = DiagnosticsRow.allCases[indexPath.row]
+            switch row {
+                
             case .exportSqliteDB:
                 // do not accept simulatenous export requests
                 if !exportDBInProgress {
@@ -1031,18 +1076,9 @@ extension SettingsViewController
                     }
                 }
                 
-                
-//            case .advancedSettings:
-//                // Create the URL that deep links to your app's custom settings.
-//                if let url = URL(string: UIApplication.openSettingsURLString) {
-//                    // Ask the system to open that URL.
-//                    UIApplication.shared.open(url)
-//                } else {
-//                    ELOG("UIApplication.openSettingsURLString invalid")
-//                }
-            case .refreshAttempts, .responseCaching, .betaUpdates, .exportResignedApp, .verboseOperationsLogging : break
-
+            case .responseCaching, .exportResignedApp, .verboseOperationsLogging : break
             }
+            
             
         // case .account, .patreon, .display, .instructions, .macDirtyCow: break
         case .account, .patreon, .display, .instructions: break
