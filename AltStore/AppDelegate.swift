@@ -53,16 +53,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let stackViewAppearance = UIStackView.appearance(whenContainedInInstancesOf: [UINavigationBar.self])
         stackViewAppearance.spacing = -8        // adjust as needed
         
-        
-        // TODO: @mahee96: the capture is started, but when application sleeps/pushed to bg
-        //                 terminate might be called even if the application is not really closed?
-        //                 so the log gets rotated making write to a new log on wake up here
-        //                 thereby splitting the logs of current session into multiple ones
-        //
-        //                 Fix this later!
-        // start logging to console immediately on startup
         consoleLog.startCapturing()
-        
+        print("===================================================")
+        print("|               App is Starting up                |")
+        print("===================================================")
+        print("| Console Logger started capturing output streams |")
+        print("===================================================")
+        print("\n ")
+
         // Override point for customization after application launch.
 //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.MigrationDebug")
 //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.SQLDebug")
@@ -153,6 +151,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func applicationWillTerminate(_ application: UIApplication) {
         // Stop console logging and clean up resources
+        print("\n ")
+        print("===================================================")
+        print("| Console Logger stopped capturing output streams |")
+        print("===================================================")
+        print("|           App is being terminated               |")
+        print("===================================================")
         consoleLog.stopCapturing()
     }
 }
