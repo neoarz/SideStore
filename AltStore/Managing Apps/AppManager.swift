@@ -1343,7 +1343,9 @@ private extension AppManager
         verifyOperation.addDependency(downloadOperation)
         
         /* Remove App Extensions */
-        let removeAppExtensionsOperation = RemoveAppExtensionsOperation(context: context, appInDatabase: app)
+        let localAppExtensions = (app as? ALTApplication)?.appExtensions
+        let removeAppExtensionsOperation = RemoveAppExtensionsOperation(context: context,
+                                                                        localAppExtensions: localAppExtensions)
         removeAppExtensionsOperation.resultHandler = { (result) in
             switch result
             {

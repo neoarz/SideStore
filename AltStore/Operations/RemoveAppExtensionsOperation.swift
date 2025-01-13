@@ -16,12 +16,12 @@ import AltSign
 final class RemoveAppExtensionsOperation: ResultOperation<Void>
 {
     let context: AppOperationContext
-    let appInDatabase: AppProtocol
+    let localAppExtensions: Set<ALTApplication>?
     
-    init(context: AppOperationContext, appInDatabase: AppProtocol)
+    init(context: AppOperationContext, localAppExtensions: Set<ALTApplication>?)
     {
         self.context = context
-        self.appInDatabase = appInDatabase
+        self.localAppExtensions = localAppExtensions
         super.init()
     }
     
@@ -41,9 +41,8 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
             ))
         }
         
-        
         self.removeAppExtensions(from: targetAppBundle,
-                                  appInDatabase: appInDatabase as? ALTApplication,
+                                  localAppExtensions: localAppExtensions,
                                   extensions: targetAppBundle.appExtensions,
                                   context.authenticatedContext.presentingViewController)
         
@@ -60,7 +59,7 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
     
     
     private func removeAppExtensions(from targetAppBundle: ALTApplication,
-                                     appInDatabase: ALTApplication?,
+                                     localAppExtensions: Set<ALTApplication>?,
                                      extensions: Set<ALTApplication>,
                                      _ presentingViewController: UIViewController?)
     {
@@ -71,13 +70,13 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
         }
         
         // process extensionsInfo
-        let excessExtensions = processExtensionsInfo(from: targetAppBundle, appInDatabase: appInDatabase)
+        let excessExtensions = processExtensionsInfo(from: targetAppBundle, localAppExtensions: localAppExtensions)
 
         DispatchQueue.main.async {
             guard let presentingViewController: UIViewController = presentingViewController,
                   presentingViewController.viewIfLoaded?.window != nil else {
                 // background mode: remove only the excess extensions automatically for re-installs
-                //                  keep all extensions for fresh install (appInDatabase = nil)
+                //                  keep all extensions for fresh install (localAppBundle = nil)
                 return self.backgroundModeExtensionsCleanup(excessExtensions: excessExtensions)
             }
 
@@ -177,13 +176,13 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
     }
     
     private func processExtensionsInfo(from targetAppBundle: ALTApplication,
-                                       appInDatabase: ALTApplication?) -> Set<ALTApplication>
+                                       localAppExtensions: Set<ALTApplication>?) -> Set<ALTApplication>
     {
         //App-Extensions: Ensure existing app's extensions in DB and currently installing app bundle's extensions must match
         let targetAppEx: Set<ALTApplication> = targetAppBundle.appExtensions
         let targetAppExNames  = targetAppEx.map{ appEx in appEx.bundleIdentifier}
 
-        guard let extensionsInExistingApp = appInDatabase?.appExtensions else {
+        guard let extensionsInExistingApp = localAppExtensions else {
             let diagnosticsMsg = "RemoveAppExtensionsOperation: ExistingApp is nil, Hence keeping all app extensions from targetAppBundle"
                                + "RemoveAppExtensionsOperation: ExistingAppEx: nil; targetAppBundleEx: \(targetAppExNames)"
             print(diagnosticsMsg)
@@ -191,20 +190,15 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
         }
         
         let existingAppEx: Set<ALTApplication> = extensionsInExistingApp
-        
         let existingAppExNames = existingAppEx.map{ appEx in appEx.bundleIdentifier}
         
         let excessExtensionsInTargetApp = targetAppEx.filter{
             !(existingAppExNames.contains($0.bundleIdentifier))
         }
-        
-        let excessExtensionsInExistingApp = existingAppEx.filter{
-            !(targetAppExNames.contains($0.bundleIdentifier))
-        }
     
         let isMatching = (targetAppEx.count == existingAppEx.count) && excessExtensionsInTargetApp.isEmpty
-        let diagnosticsMsg = "RemoveAppExtensionsOperation: App Extensions in existingApp and targetAppBundle are matching: \(isMatching)\n"
-                           + "RemoveAppExtensionsOperation: existingAppEx: \(existingAppExNames); targetAppBundleEx: \(String(describing: targetAppExNames))\n"
+        let diagnosticsMsg = "RemoveAppExtensionsOperation: App Extensions in localAppBundle and targetAppBundle are matching: \(isMatching)\n"
+                           + "RemoveAppExtensionsOperation: \nlocalAppBundleEx: \(existingAppExNames); \ntargetAppBundleEx: \(String(describing: targetAppExNames))\n"
         print(diagnosticsMsg)
 
         return excessExtensionsInTargetApp
