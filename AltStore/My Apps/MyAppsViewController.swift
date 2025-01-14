@@ -1503,27 +1503,27 @@ private extension MyAppsViewController
         }
     }
     
-    func enableJIT(for installedApp: InstalledApp)
-    {
-        
+    func enableJIT(for installedApp: InstalledApp) {
         let sidejitenabled = UserDefaults.standard.sidejitenable
         
-        if #unavailable(iOS 17) {
+        if #unavailable(iOS 17), !sidejitenabled {
             guard minimuxerStatus else { return }
         }
         
-
         if #available(iOS 17, *), !sidejitenabled {
-            ToastView(error: (OperationError.tooNewError as NSError).withLocalizedTitle("No iOS 17 On Device JIT!"), opensLog: true).show(in: self)
-            AppManager.shared.log(OperationError.tooNewError, operation: .enableJIT, app: installedApp)
+            let error = OperationError.tooNewError as NSError
+            let localizedError = error.withLocalizedTitle("No iOS 17 On Device JIT!")
+            
+            ToastView(error: localizedError, opensLog: true).show(in: self)
+            AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
             return
         }
         
         AppManager.shared.enableJIT(for: installedApp) { result in
             DispatchQueue.main.async {
-                switch result
-                {
-                case .success: break
+                switch result {
+                case .success:
+                    break
                 case .failure(let error):
                     ToastView(error: error, opensLog: true).show(in: self)
                     AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
