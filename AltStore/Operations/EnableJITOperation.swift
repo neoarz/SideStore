@@ -112,11 +112,6 @@ func enableJITSideJITServer(serverURL: URL, installedApp: InstalledApp, completi
         return
     }
     
-    guard serverURL.hasPrefix("http") else {
-        completion(.failure(.invalidURL))
-        return
-    }
-    
     let serverURLWithUDID = serverURL.appendingPathComponent(udid)
     let fullURL = serverURLWithUDID.appendingPathComponent(installedApp.resignedBundleIdentifier)
     
