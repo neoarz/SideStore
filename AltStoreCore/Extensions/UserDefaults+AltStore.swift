@@ -35,6 +35,7 @@ public extension UserDefaults
     @NSManaged var isBetaUpdatesEnabled: Bool
     @NSManaged var isExportResignedAppEnabled: Bool
     @NSManaged var isVerboseOperationsLoggingEnabled: Bool
+    @NSManaged var isMinimuxerConsoleLoggingEnabled: Bool
     @NSManaged var isPairingReset: Bool
     @NSManaged var isDebugModeEnabled: Bool
     @NSManaged var presentedLaunchReminderNotification: Bool
@@ -124,6 +125,7 @@ public extension UserDefaults
             #keyPath(UserDefaults.isExportResignedAppEnabled): false,
             #keyPath(UserDefaults.isDebugModeEnabled): false,
             #keyPath(UserDefaults.isVerboseOperationsLoggingEnabled): false,
+            #keyPath(UserDefaults.isMinimuxerConsoleLoggingEnabled): true, // minimuxer logging is enabled by default as before
             #keyPath(UserDefaults.isBackgroundRefreshEnabled): true,
             #keyPath(UserDefaults.isIdleTimeoutDisableEnabled): true,
             #keyPath(UserDefaults.isPairingReset): true,

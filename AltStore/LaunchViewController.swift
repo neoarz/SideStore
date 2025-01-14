@@ -248,7 +248,9 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
         target_minimuxer_address()
         let documentsDirectory = FileManager.default.documentsDirectory.absoluteString
         do {
-            try start(pairing_file, documentsDirectory)
+            // enable minimuxer console logging only if enabled in settings
+            let isMinimuxerConsoleLoggingEnabled = UserDefaults.standard.isMinimuxerConsoleLoggingEnabled
+            try minimuxer.startWithLogger(pairing_file, documentsDirectory, isMinimuxerConsoleLoggingEnabled)
         } catch {
             try! FileManager.default.removeItem(at: FileManager.default.documentsDirectory.appendingPathComponent("\(pairingFileName)"))
             displayError("minimuxer failed to start, please restart SideStore. \((error as? LocalizedError)?.failureReason ?? "UNKNOWN ERROR!!!!!! REPORT TO GITHUB ISSUES!")")

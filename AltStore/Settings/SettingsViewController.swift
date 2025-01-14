@@ -81,6 +81,7 @@ extension SettingsViewController
         case verboseOperationsLogging
         case exportSqliteDB
         case operationsLoggingControl
+        case minimuxerConsoleLogging
     }
 }
 
@@ -103,8 +104,9 @@ final class SettingsViewController: UITableViewController
     @IBOutlet private var betaUpdatesSwitch: UISwitch!
     @IBOutlet private var exportResignedAppsSwitch: UISwitch!
     @IBOutlet private var verboseOperationsLoggingSwitch: UISwitch!
+    @IBOutlet private var minimuxerConsoleLoggingSwitch: UISwitch!
     
-    @IBOutlet private var refreshSideJITServer: UILabel!
+//    @IBOutlet private var refreshSideJITServer: UILabel!
     @IBOutlet private var disableResponseCachingSwitch: UISwitch!
     
     @IBOutlet private var mastodonButton: UIButton!
@@ -299,6 +301,7 @@ private extension SettingsViewController
         self.disableResponseCachingSwitch.isOn = UserDefaults.standard.responseCachingDisabled
         self.exportResignedAppsSwitch.isOn = UserDefaults.standard.isExportResignedAppEnabled
         self.verboseOperationsLoggingSwitch.isOn = UserDefaults.standard.isVerboseOperationsLoggingEnabled
+        self.minimuxerConsoleLoggingSwitch.isOn = UserDefaults.standard.isMinimuxerConsoleLoggingEnabled
 
         if self.isViewLoaded
         {
@@ -492,6 +495,11 @@ private extension SettingsViewController
     @IBAction func toggleVerboseOperationsLogging(_ sender: UISwitch) {
         // update it in database
         UserDefaults.standard.isVerboseOperationsLoggingEnabled = sender.isOn
+    }
+
+    @IBAction func toggleMinimuxerConsoleLogging(_ sender: UISwitch) {
+        // update it in database
+        UserDefaults.standard.isMinimuxerConsoleLoggingEnabled = sender.isOn
     }
 
     @IBAction func toggleEnableBetaUpdates(_ sender: UISwitch) {
@@ -1099,7 +1107,7 @@ extension SettingsViewController
                 let segue = UIStoryboardSegue(identifier: "operationsLoggingControl", source: self, destination: operationsLoggingController)
                 self.present(segue.destination, animated: true, completion: nil)
                 
-            case .responseCaching, .exportResignedApp, .verboseOperationsLogging : break
+            case .responseCaching, .exportResignedApp, .verboseOperationsLogging, .minimuxerConsoleLogging : break
             }
             
             
