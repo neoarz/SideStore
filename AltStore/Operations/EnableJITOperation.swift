@@ -58,35 +58,32 @@ final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
         
         if #available(iOS 17, *), userdefaults.sidejitenable {
             let SideJITIP = userdefaults.textInputSideJITServerurl ?? "http://sidejitserver._http._tcp.local:8080"
-            
-            if sideJITenabled {
-                installedApp.managedObjectContext?.perform {
-                    enableJITSideJITServer(serverurl: URL(string: SideJITIP)!, installedapp: installedApp) { result in
-                        switch result {
-                        case .failure(let error):
-                            switch error {
-                            case .invalidURL, .errorConnecting:
-                                self.finish(.failure(OperationError.unableToConnectSideJIT))
-                            case .deviceNotFound:
-                                self.finish(.failure(OperationError.unableToRespondSideJITDevice))
-                            case .other(let message):
-                                if let startRange = message.range(of: "<p>"),
-                                   let endRange = message.range(of: "</p>", range: startRange.upperBound..<message.endIndex) {
-                                    let pContent = message[startRange.upperBound..<endRange.lowerBound]
-                                    self.finish(.failure(OperationError.SideJITIssue(error: String(pContent))))
-                                    print(message + " + " + String(pContent))
-                                } else {
-                                    print(message)
-                                    self.finish(.failure(OperationError.SideJITIssue(error: message)))
-                                }
+            installedApp.managedObjectContext?.perform {
+                enableJITSideJITServer(serverURL: URL(string: SideJITIP)!, installedApp: installedApp) { result in
+                    switch result {
+                    case .failure(let error):
+                        switch error {
+                        case .invalidURL, .errorConnecting:
+                            self.finish(.failure(OperationError.unableToConnectSideJIT))
+                        case .deviceNotFound:
+                            self.finish(.failure(OperationError.unableToRespondSideJITDevice))
+                        case .other(let message):
+                            if let startRange = message.range(of: "<p>"),
+                               let endRange = message.range(of: "</p>", range: startRange.upperBound..<message.endIndex) {
+                                let pContent = message[startRange.upperBound..<endRange.lowerBound]
+                                self.finish(.failure(OperationError.SideJITIssue(error: String(pContent))))
+                                print(message + " + " + String(pContent))
+                            } else {
+                                print(message)
+                                self.finish(.failure(OperationError.SideJITIssue(error: message)))
                             }
-                        case .success():
-                            self.finish(.success(()))
-                            print("JIT Enabled Successfully :3 (code made by Stossy11!)")
                         }
+                    case .success():
+                        self.finish(.success(()))
+                        print("JIT Enabled Successfully :3 (code made by Stossy11!)")
                     }
-                    return
                 }
+                return
             }
       } else {
             installedApp.managedObjectContext?.perform {
