@@ -61,7 +61,7 @@ final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
             
             if sideJITenabled {
                 installedApp.managedObjectContext?.perform {
-                    EnableJITSideJITServer(serverurl: URL(string: SideJITIP)!, installedapp: installedApp) { result in
+                    enableJITSideJITServer(serverurl: URL(string: SideJITIP)!, installedapp: installedApp) { result in
                         switch result {
                         case .failure(let error):
                             switch error {
@@ -82,7 +82,7 @@ final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
                             }
                         case .success():
                             self.finish(.success(()))
-                            print("JIT Enabled Successfully :3 (code made by stossy11)")
+                            print("JIT Enabled Successfully :3 (code made by Stossy11!)")
                         }
                     }
                     return
