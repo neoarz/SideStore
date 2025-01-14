@@ -39,7 +39,8 @@ class ResultOperation<ResultType>: Operation
         }
         
         // Diagnostics: perform verbose logging of the operations only if enabled (so as to not flood console logs)
-        if UserDefaults.standard.isVerboseOperationsLoggingEnabled {
+        let isLoggingEnabledForThisOperation = OperationsLoggingControl.getFromDatabase(for: type(of: self))
+        if UserDefaults.standard.isVerboseOperationsLoggingEnabled && isLoggingEnabledForThisOperation {
             // diagnostics logging
             let resultStatus = String(describing: result).prefix("success".count).uppercased()
             print("\n  ====> OPERATION: `\(type(of: self))` completed with: \(resultStatus) <====\n\n" +

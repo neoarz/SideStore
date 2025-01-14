@@ -65,6 +65,8 @@
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868CFE32D319988002F1201 /* SingletonGenericMap.swift */; };
 		A8696EE42D34512C00E96389 /* RemoveAppExtensionsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */; };
+		A88B8C492D35AD3200F53F9D /* OperationsLoggingContolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */; };
+		A88B8C552D35F1EC00F53F9D /* OperationsLoggingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88B8C542D35F1EC00F53F9D /* OperationsLoggingControl.swift */; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8A543302D04F14400D72399 /* libfragmentzip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A8A5432F2D04F0C100D72399 /* libfragmentzip.a */; };
 		A8A853AF2D3065A300995795 /* ActiveAppsTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */; };
@@ -647,6 +649,8 @@
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
 		A868CFE32D319988002F1201 /* SingletonGenericMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingletonGenericMap.swift; sourceTree = "<group>"; };
 		A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveAppExtensionsOperation.swift; sourceTree = "<group>"; };
+		A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsLoggingContolView.swift; sourceTree = "<group>"; };
+		A88B8C542D35F1EC00F53F9D /* OperationsLoggingControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsLoggingControl.swift; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8A853AE2D3065A300995795 /* ActiveAppsTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveAppsTimelineProvider.swift; sourceTree = "<group>"; };
 		A8AD35582D31BF29003A28B4 /* PageInfoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageInfoManager.swift; sourceTree = "<group>"; };
@@ -1211,6 +1215,14 @@
 			path = xcconfigs;
 			sourceTree = "<group>";
 		};
+		A88B8C532D35F1E800F53F9D /* operations */ = {
+			isa = PBXGroup;
+			children = (
+				A88B8C542D35F1EC00F53F9D /* OperationsLoggingControl.swift */,
+			);
+			path = operations;
+			sourceTree = "<group>";
+		};
 		A8A543222D04F0C100D72399 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1249,6 +1261,7 @@
 		A8B516DE2D2666900047047C /* dignostics */ = {
 			isa = PBXGroup;
 			children = (
+				A88B8C532D35F1E800F53F9D /* operations */,
 				A8B516DF2D2666A00047047C /* database */,
 			);
 			path = dignostics;
@@ -1995,6 +2008,7 @@
 		BFDB69FB22A9A7A6007EA6D6 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */,
 				BFE60737231ADF49002B0E8E /* Settings.storyboard */,
 				BFE60739231ADF82002B0E8E /* SettingsViewController.swift */,
 				0EA426392C2230150026D7FB /* AnisetteServerList.swift */,
@@ -2018,30 +2032,30 @@
 			children = (
 				D513F6152A12CE210061EAA1 /* Errors */,
 				BFDB6A0A22AAEDB7007EA6D6 /* Operation.swift */,
-				BF770E5722BC3D0F002A40FE /* RefreshGroup.swift */,
 				BF770E5322BC044E002A40FE /* OperationContexts.swift */,
+				BF770E5722BC3D0F002A40FE /* RefreshGroup.swift */,
 				BFE6326B22A86FF300F30809 /* AuthenticationOperation.swift */,
+				D561AF812B21669400BF59C6 /* VerifyAppPledgeOperation.swift */,
 				BFC1F38C22AEE3A4003AC21A /* DownloadAppOperation.swift */,
-				BFDB6A0722AAED73007EA6D6 /* ResignAppOperation.swift */,
+				BFCCB519245E3401001853EA /* VerifyAppOperation.swift */,
+				A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */,
+				BFA8172A23C5633D001B5953 /* FetchAnisetteDataOperation.swift */,
 				BF3BEFBE2408673400DE7D55 /* FetchProvisioningProfilesOperation.swift */,
-				BF3BEFC024086A1E00DE7D55 /* RefreshAppOperation.swift */,
+				BFDB6A0722AAED73007EA6D6 /* ResignAppOperation.swift */,
 				BFDB6A0E22AB2776007EA6D6 /* SendAppOperation.swift */,
 				BF770E5022BB1CF6002A40FE /* InstallAppOperation.swift */,
-				BFE338DE22F0EADB002E24B9 /* FetchSourceOperation.swift */,
-				BFA8172A23C5633D001B5953 /* FetchAnisetteDataOperation.swift */,
+				BF3BEFC024086A1E00DE7D55 /* RefreshAppOperation.swift */,
 				BF56D2AB23DF8E170006506D /* FetchAppIDsOperation.swift */,
-				BFC57A642416C72400EB891E /* DeactivateAppOperation.swift */,
-				BFCCB519245E3401001853EA /* VerifyAppOperation.swift */,
-				BF44EEFB246B4550002A52F2 /* RemoveAppOperation.swift */,
+				BFE338DE22F0EADB002E24B9 /* FetchSourceOperation.swift */,
+				D5E1E7C028077DE90016FC96 /* UpdateKnownSourcesOperation.swift */,
 				BF3432FA246B894F0052F4A1 /* BackupAppOperation.swift */,
 				BFDBBD7F246CB84F004ED2F3 /* RemoveAppBackupOperation.swift */,
+				BF44EEFB246B4550002A52F2 /* RemoveAppOperation.swift */,
+				BFC57A642416C72400EB891E /* DeactivateAppOperation.swift */,
 				BFF00D312501BDA100746320 /* BackgroundRefreshAppsOperation.swift */,
 				D57F2C9026E0070200B9FA39 /* EnableJITOperation.swift */,
 				D5DAE0952804DF430034D8D4 /* UpdatePatronsOperation.swift */,
-				D5E1E7C028077DE90016FC96 /* UpdateKnownSourcesOperation.swift */,
 				D5ACE84428E3B8450021CAB9 /* ClearAppCacheOperation.swift */,
-				D561AF812B21669400BF59C6 /* VerifyAppPledgeOperation.swift */,
-				A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */,
 				BF7B44062725A4B8005288A4 /* Patch App */,
 			);
 			path = Operations;
@@ -3063,6 +3077,7 @@
 				BF770E5822BC3D0F002A40FE /* RefreshGroup.swift in Sources */,
 				19B9B7452845E6DF0076EF69 /* SelectTeamViewController.swift in Sources */,
 				0E13E5862CC8F55900E9C0DF /* ProcessInfo+SideStore.swift in Sources */,
+				A88B8C492D35AD3200F53F9D /* OperationsLoggingContolView.swift in Sources */,
 				D59162AB29BA60A9005CBF47 /* SourceHeaderView.swift in Sources */,
 				BF18B0F122E25DF9005C4CF5 /* ToastView.swift in Sources */,
 				BF3D649F22E7B24C00E9056B /* CollapsingTextView.swift in Sources */,
@@ -3072,6 +3087,7 @@
 				BFC84A4D2421A19100853474 /* SourcesViewController.swift in Sources */,
 				BFF0B696232242D3007A79E1 /* LicensesViewController.swift in Sources */,
 				D57FE84428C7DB7100216002 /* ErrorLogViewController.swift in Sources */,
+				A88B8C552D35F1EC00F53F9D /* OperationsLoggingControl.swift in Sources */,
 				D50107EC2ADF2E1A0069F2A1 /* AddSourceTextFieldCell.swift in Sources */,
 				D5151BD92A8FF64300C96F28 /* RefreshAllAppsIntent.swift in Sources */,
 				BFBE0007250AD0E70080826E /* ViewAppIntentHandler.swift in Sources */,

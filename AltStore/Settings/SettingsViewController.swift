@@ -80,6 +80,7 @@ extension SettingsViewController
         case exportResignedApp
         case verboseOperationsLogging
         case exportSqliteDB
+        case operationsLoggingControl
     }
 }
 
@@ -1090,6 +1091,13 @@ extension SettingsViewController
                         exportDBInProgress = false
                     }
                 }
+                
+            case .operationsLoggingControl:
+                // Instantiate SwiftUI View inside UIHostingController
+                let operationsLoggingControlView = OperationsLoggingControlView()
+                let operationsLoggingController = UIHostingController(rootView: operationsLoggingControlView)
+                let segue = UIStoryboardSegue(identifier: "operationsLoggingControl", source: self, destination: operationsLoggingController)
+                self.present(segue.destination, animated: true, completion: nil)
                 
             case .responseCaching, .exportResignedApp, .verboseOperationsLogging : break
             }
