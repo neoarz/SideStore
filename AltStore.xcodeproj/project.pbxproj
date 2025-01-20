@@ -62,6 +62,7 @@
 		A82067C42D03E0DE00645C0D /* SemanticVersion in Frameworks */ = {isa = PBXBuildFile; productRef = A82067C32D03E0DE00645C0D /* SemanticVersion */; };
 		A859ED5C2D1EE827003DCC58 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; };
 		A859ED5D2D1EE827003DCC58 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A859ED5B2D1EE80D003DCC58 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A86315DF2D3EB2DE0048FA40 /* ErrorProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86315DE2D3EB2D80048FA40 /* ErrorProcessing.swift */; };
 		A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868CFE32D319988002F1201 /* SingletonGenericMap.swift */; };
 		A8696EE42D34512C00E96389 /* RemoveAppExtensionsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */; };
 		A88B8C492D35AD3200F53F9D /* OperationsLoggingContolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */; };
@@ -645,6 +646,7 @@
 		A85ACB932D1F31C400AA3DE7 /* AltWidgetExtension.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltWidgetExtension.xcconfig; sourceTree = "<group>"; };
 		A86202322D1F35640091187B /* AltStore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStore.xcconfig; sourceTree = "<group>"; };
 		A86202332D1F35640091187B /* AltStoreCore.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AltStoreCore.xcconfig; sourceTree = "<group>"; };
+		A86315DE2D3EB2D80048FA40 /* ErrorProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorProcessing.swift; sourceTree = "<group>"; };
 		A868CFE32D319988002F1201 /* SingletonGenericMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingletonGenericMap.swift; sourceTree = "<group>"; };
 		A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveAppExtensionsOperation.swift; sourceTree = "<group>"; };
 		A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsLoggingContolView.swift; sourceTree = "<group>"; };
@@ -1214,6 +1216,14 @@
 			path = xcconfigs;
 			sourceTree = "<group>";
 		};
+		A86315DD2D3EB2BD0048FA40 /* errors */ = {
+			isa = PBXGroup;
+			children = (
+				A86315DE2D3EB2D80048FA40 /* ErrorProcessing.swift */,
+			);
+			path = errors;
+			sourceTree = "<group>";
+		};
 		A88B8C532D35F1E800F53F9D /* operations */ = {
 			isa = PBXGroup;
 			children = (
@@ -1260,6 +1270,7 @@
 		A8B516DE2D2666900047047C /* dignostics */ = {
 			isa = PBXGroup;
 			children = (
+				A86315DD2D3EB2BD0048FA40 /* errors */,
 				A88B8C532D35F1E800F53F9D /* operations */,
 				A8B516DF2D2666A00047047C /* database */,
 			);
@@ -3008,6 +3019,7 @@
 				BF56D2AC23DF8E170006506D /* FetchAppIDsOperation.swift in Sources */,
 				BFC1F38D22AEE3A4003AC21A /* DownloadAppOperation.swift in Sources */,
 				BFE6073A231ADF82002B0E8E /* SettingsViewController.swift in Sources */,
+				A86315DF2D3EB2DE0048FA40 /* ErrorProcessing.swift in Sources */,
 				D57F2C9126E0070200B9FA39 /* EnableJITOperation.swift in Sources */,
 				BF8CAE4E248AEABA004D6CCE /* UIDevice+Jailbreak.swift in Sources */,
 				D5E1E7C128077DE90016FC96 /* UpdateKnownSourcesOperation.swift in Sources */,
