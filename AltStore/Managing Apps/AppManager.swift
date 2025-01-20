@@ -626,6 +626,11 @@ extension AppManager
         self.fetchSources() { (result) in
             do
             {
+                // Check if the result is failure and rethrow
+                if case .failure(let error) = result {
+                    throw error  // Rethrow the error
+                }
+                
                 do
                 {
                     let (_, context) = try result.get()

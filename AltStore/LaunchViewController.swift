@@ -313,6 +313,9 @@ extension LaunchViewController
             guard case .failure(let error) = result else { return }
             Logger.main.error("Failed to update sources on launch. \(error.localizedDescription, privacy: .public)")
             
+            let errorDesc = ErrorProcessing(.fullError).getDescription(error: error as NSError)
+            print("Failed to update sources on launch. \(errorDesc)")
+            
             let toastView = ToastView(error: error)
             toastView.addTarget(self.destinationViewController, action: #selector(TabBarController.presentSources), for: .touchUpInside)
             toastView.show(in: self.destinationViewController.selectedViewController ?? self.destinationViewController)
