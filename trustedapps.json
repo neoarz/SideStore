@@ -9,6 +9,10 @@
       "sourceURL": "https://community-apps.sidestore.io/sidecommunity.json"
     },
     {
+      "identifier": "com.neo.countdown",
+      "sourceURL": "https://raw.githubusercontent.com/neoarz/Countdown-App/refs/heads/main/Countdown.json"
+    },
+    {
       "identifier": "org.provenance-emu.provenance",
       "sourceURL": "https://provenance-emu.com/apps.json"
     },
@@ -56,6 +60,10 @@
     {
       "identifier": "com.sidestoreapps.community",
       "sourceURL": "https://community-apps.sidestore.io/sidecommunity.json"
+    },
+    {
+      "identifier": "com.neo.countdown",
+      "sourceURL": "https://raw.githubusercontent.com/neoarz/Countdown-App/refs/heads/main/Countdown.json"
     },
     {
       "identifier": "org.provenance-emu.provenance",
