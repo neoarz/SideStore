@@ -593,30 +593,30 @@ extension AppManager
     
     func updatePatronsIfNeeded()
     {
-        guard self.operationQueue.operations.allSatisfy({ !($0 is UpdatePatronsOperation) }) else {
-            // There's already an UpdatePatronsOperation running.
-            return
-        }
-        
-        self.updatePatronsResult = nil
-        
-        let updatePatronsOperation = UpdatePatronsOperation()
-        updatePatronsOperation.resultHandler = { (result) in
-            do
-            {
-                try result.get()
-                self.updatePatronsResult = .success(())
-            }
-            catch
-            {
-                print("Error updating Friend Zone Patrons:", error)
-                self.updatePatronsResult = .failure(error)
-            }
-            
-            NotificationCenter.default.post(name: AppManager.didUpdatePatronsNotification, object: self)
-        }
-        
-        self.run([updatePatronsOperation], context: nil)
+//        guard self.operationQueue.operations.allSatisfy({ !($0 is UpdatePatronsOperation) }) else {
+//            // There's already an UpdatePatronsOperation running.
+//            return
+//        }
+//        
+//        self.updatePatronsResult = nil
+//        
+//        let updatePatronsOperation = UpdatePatronsOperation()
+//        updatePatronsOperation.resultHandler = { (result) in
+//            do
+//            {
+//                try result.get()
+//                self.updatePatronsResult = .success(())
+//            }
+//            catch
+//            {
+//                print("Error updating Friend Zone Patrons:", error)
+//                self.updatePatronsResult = .failure(error)
+//            }
+//            
+//            NotificationCenter.default.post(name: AppManager.didUpdatePatronsNotification, object: self)
+//        }
+//        
+//        self.run([updatePatronsOperation], context: nil)
     }
     
     func updateAllSources(completion: @escaping (Result<Void, Error>) -> Void)
@@ -634,6 +634,9 @@ extension AppManager
                 do
                 {
                     let (_, context) = try result.get()
+//                    print("\n\n\n\(context.insertedObjects)\n\n\n")
+//                    print("\n\n\n\(context.updatedObjects)\n\n\n")
+//                    print("\n\n\n\(context.deletedObjects)\n\n\n")
                     try context.save()
                     
                     DispatchQueue.main.async {
