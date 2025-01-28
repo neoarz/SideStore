@@ -238,10 +238,10 @@ struct OperationError: ALTLocalizedError {
 
         case .invalidParameters:
             let message = self._failureReason.map { ": \n\($0)" } ?? "."
-            return String(format: NSLocalizedString("Invalid parameters\n%@", comment: ""), message)
+            return String(format: NSLocalizedString("Invalid parameters%@", comment: ""), message)
         case .invalidOperationContext:
             let message = self._failureReason.map { ": \n\($0)" } ?? "."
-            return String(format: NSLocalizedString("Invalid Operation Context\n%@", comment: ""), message)
+            return String(format: NSLocalizedString("Invalid Operation Context%@", comment: ""), message)
         case .serverNotFound: return NSLocalizedString("AltServer could not be found.", comment: "")
         case .connectionFailed: return NSLocalizedString("A connection to AltServer could not be established.", comment: "")
         case .connectionDropped: return NSLocalizedString("The connection to AltServer was dropped.", comment: "")
