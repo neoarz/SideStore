@@ -1231,8 +1231,11 @@ private extension AppManager
         }
         else
         {
-            DispatchQueue.main.schedule {
-                UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
+            // Disable the idleTimeout
+            if !UIApplication.shared.isIdleTimerDisabled {       // accept only once if concurrent
+                DispatchQueue.main.schedule {
+                    UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
+                }
             }
             performAppOperations()
             // Moved to self.finish()
@@ -2099,9 +2102,14 @@ private extension AppManager
     
     func finish(_ operation: AppOperation, result: Result<InstalledApp, Error>, group: RefreshGroup, progress: Progress?)
     {
-        // remove disableIdleTimeout 
-        DispatchQueue.main.schedule {
-            UIApplication.shared.isIdleTimerDisabled = false
+        // Remove disableIdleTimeout
+        // TODO: This should disable for the last finish() request not the first though for batches
+        //       probably if we are in batch mode, we can count expected no of finishes() to arrive
+        //       and schedule disabling only on last request by matching it with count.
+        if UIApplication.shared.isIdleTimerDisabled {       // accept only once if concurrent
+            DispatchQueue.main.schedule {
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
         }
 
         // Must remove before saving installedApp.
