@@ -195,7 +195,7 @@ extension AppIDsViewController: UICollectionViewDelegateFlowLayout
         
         // NOTE: double dequeue of cell has been discontinued
         // TODO: Using harcoded value until this is fixed
-        return CGSize(width: collectionView.bounds.width, height: 260)
+        return CGSize(width: collectionView.bounds.width, height: 200)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize
