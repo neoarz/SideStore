@@ -1235,9 +1235,10 @@ private extension AppManager
                 UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
             }
             performAppOperations()
-            DispatchQueue.main.schedule {
-                UIApplication.shared.isIdleTimerDisabled = false
-            }
+            // Moved to self.finish()
+//            DispatchQueue.main.schedule {
+//                UIApplication.shared.isIdleTimerDisabled = false
+//            }
         }
         
         return group
@@ -2098,6 +2099,11 @@ private extension AppManager
     
     func finish(_ operation: AppOperation, result: Result<InstalledApp, Error>, group: RefreshGroup, progress: Progress?)
     {
+        // remove disableIdleTimeout 
+        DispatchQueue.main.schedule {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+
         // Must remove before saving installedApp.
         if let currentProgress = self.progress(for: operation), currentProgress == progress
         {
