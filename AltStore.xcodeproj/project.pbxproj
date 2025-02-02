@@ -65,6 +65,8 @@
 		A86315DF2D3EB2DE0048FA40 /* ErrorProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86315DE2D3EB2D80048FA40 /* ErrorProcessing.swift */; };
 		A868CFE42D31999A002F1201 /* SingletonGenericMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A868CFE32D319988002F1201 /* SingletonGenericMap.swift */; };
 		A8696EE42D34512C00E96389 /* RemoveAppExtensionsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */; };
+		A888EAD52D401D8F0026F7E3 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A888EAD42D401D8A0026F7E3 /* BuildInfo.swift */; };
+		A888EAD62D4020770026F7E3 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A888EAD42D401D8A0026F7E3 /* BuildInfo.swift */; };
 		A88B8C492D35AD3200F53F9D /* OperationsLoggingContolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */; };
 		A88B8C552D35F1EC00F53F9D /* OperationsLoggingControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88B8C542D35F1EC00F53F9D /* OperationsLoggingControl.swift */; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
@@ -649,6 +651,7 @@
 		A86315DE2D3EB2D80048FA40 /* ErrorProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorProcessing.swift; sourceTree = "<group>"; };
 		A868CFE32D319988002F1201 /* SingletonGenericMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingletonGenericMap.swift; sourceTree = "<group>"; };
 		A8696EE32D34512C00E96389 /* RemoveAppExtensionsOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoveAppExtensionsOperation.swift; sourceTree = "<group>"; };
+		A888EAD42D401D8A0026F7E3 /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
 		A88B8C482D35AD3200F53F9D /* OperationsLoggingContolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsLoggingContolView.swift; sourceTree = "<group>"; };
 		A88B8C542D35F1EC00F53F9D /* OperationsLoggingControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsLoggingControl.swift; sourceTree = "<group>"; };
 		A8945AA52D059B6100D86CBE /* Roxas.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1224,6 +1227,14 @@
 			path = errors;
 			sourceTree = "<group>";
 		};
+		A888EAD32D401D7C0026F7E3 /* buildinfo */ = {
+			isa = PBXGroup;
+			children = (
+				A888EAD42D401D8A0026F7E3 /* BuildInfo.swift */,
+			);
+			path = buildinfo;
+			sourceTree = "<group>";
+		};
 		A88B8C532D35F1E800F53F9D /* operations */ = {
 			isa = PBXGroup;
 			children = (
@@ -1288,6 +1299,7 @@
 		A8C38C1C2D2068D100E83DBD /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A888EAD32D401D7C0026F7E3 /* buildinfo */,
 				A8AD35572D31BEB2003A28B4 /* datastructures */,
 				A8A853AD2D3050CC00995795 /* pagination */,
 				A8087E712D2D291B002DB21B /* importexport */,
@@ -2910,6 +2922,7 @@
 				0E05025C2BEC947000879B5C /* String+SideStore.swift in Sources */,
 				0EE7FDCB2BE8D12B00D1E390 /* ALTLocalizedError.swift in Sources */,
 				BF66EEA92501AEC5007EE018 /* Tier.swift in Sources */,
+				A888EAD62D4020770026F7E3 /* BuildInfo.swift in Sources */,
 				BF66EEDB2501AECA007EE018 /* StoreApp.swift in Sources */,
 				D5CE309C2B4C946300DB8151 /* AltStore15ToAltStore16.xcmappingmodel in Sources */,
 				BF66EEDE2501AECA007EE018 /* AppID.swift in Sources */,
@@ -3054,6 +3067,7 @@
 				BFF00D302501BD7D00746320 /* Intents.intentdefinition in Sources */,
 				D5B6F6AB2AD76541007EED5A /* PreviewAppScreenshotsViewController.swift in Sources */,
 				BFD2476E2284B9A500981D42 /* AppDelegate.swift in Sources */,
+				A888EAD52D401D8F0026F7E3 /* BuildInfo.swift in Sources */,
 				BF41B806233423AE00C593A3 /* TabBarController.swift in Sources */,
 				BFE00A202503097F00EB4D0C /* INInteraction+AltStore.swift in Sources */,
 				BFDB6A0B22AAEDB7007EA6D6 /* Operation.swift in Sources */,

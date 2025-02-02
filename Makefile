@@ -161,19 +161,24 @@ test:
 IS_ALPHA_TRUE := $(filter true TRUE 1, $(IS_ALPHA))
 IS_BETA_TRUE := $(filter true TRUE 1, $(IS_BETA))
 
+# set build types to embed into Info.plist for key: BuildChannel
+BUILD_CHANNEL := stable
+BUILD_CHANNEL := $(if $(IS_ALPHA_TRUE),alpha,$(BUILD_CHANNEL))
+BUILD_CHANNEL := $(if $(IS_BETA_TRUE),beta,$(BUILD_CHANNEL))
+
 # Fetch the latest commit ID for ALPHA or BETA builds
 COMMIT_ID := $(if $(or $(IS_ALPHA_TRUE),$(IS_BETA_TRUE)),$(shell git rev-parse --short HEAD),)
 
 # Print release type based on the value of IS_ALPHA or IS_BETA
 print_release_type:
 	@echo ""
-	@if [ "$(filter true TRUE 1,$(IS_ALPHA))" ]; then \
+	@if [ $(IS_ALPHA_TRUE) ]; then \
 		echo "'IS_ALPHA' is set to true. Fetched the latest commit ID from HEAD..."; \
 		echo "    Commit ID: $(COMMIT_ID)"; \
 		echo ""; \
 		echo ">>>>>>>> This is now an ALPHA release for COMMIT_ID = '$(COMMIT_ID)' <<<<<<<<<"; \
 		echo "    Building with BUILD_REVISION = '$(COMMIT_ID)'"; \
-	elif [ "$(filter true TRUE 1,$(IS_BETA))" ]; then \
+	elif [ $(IS_BETA_TRUE) ]; then \
 		echo "'IS_BETA' is set to true. Fetched the latest commit ID from HEAD..."; \
 		echo "    Commit ID: $(COMMIT_ID)"; \
 		echo ""; \
@@ -215,6 +220,7 @@ build: print_release_type
 				DEVELOPMENT_TEAM=XYZ0123456 \
 				ORG_IDENTIFIER=com.SideStore \
 				BUILD_REVISION=$(COMMIT_ID) \
+				BUILD_CHANNEL=$(BUILD_CHANNEL)
 				BUNDLE_ID_SUFFIX=
 #				DWARF_DSYM_FOLDER_PATH="."
 

@@ -211,20 +211,11 @@ private extension SettingsViewController
 {
     
     private func getVersionLabel() -> String {
-        let MARKETING_VERSION_KEY = "CFBundleShortVersionString"
-        let BUILD_REVISION = "CFBundleRevision"     // commit ID for now (but could be any, set by build env vars
-        let CURRENT_PROJECT_VERSION = kCFBundleVersionKey as String
+        let buildInfo = BuildInfo()
         
         func getXcodeVersion() -> String {
-            let XCODE_VERSION = "DTXcode"
-            let XCODE_REVISION = "DTXcodeBuild"
-
-            let xcode = Bundle.main.object(forInfoDictionaryKey: XCODE_VERSION) as? String
-            let build = Bundle.main.object(forInfoDictionaryKey: XCODE_REVISION) as? String
-            
-            var xcodeVersion = xcode.map { version in
-//                " - Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
-                "Xcode \(version) - " + (build.map { revision in "\(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
+            var xcodeVersion =  buildInfo.xcode.map { version in
+                "Xcode \(version)" + (buildInfo.xcode_revision.map { revision in " - \(revision)" } ?? "")       // Ex: "0.6.0 - Xcode 16.2 - 21ac1ef"
             } ?? ""
 
             if let pairing = Bundle.main.object(forInfoDictionaryKey: "ALTPairingFile") as? String,
@@ -234,26 +225,25 @@ private extension SettingsViewController
             return xcodeVersion
         }
 
+        
         var versionLabel: String = ""
         
         if let installedApp = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
         {
-            #if BETA
-            // Only show build version (and build revision) for BETA builds.
-            let bundleVersion: String? = Bundle.main.object(forInfoDictionaryKey: CURRENT_PROJECT_VERSION) as? String
-            let buildRevision: String? = Bundle.main.object(forInfoDictionaryKey: BUILD_REVISION) as? String
+            let isStableBuild = (buildInfo.channel == .stable)
+            let revision = buildInfo.revision ?? ""
             
-            var localizedVersion = bundleVersion.map { version in
-                "\(installedApp.version) (\(version))" + (buildRevision.map { revision in " - \(revision)" } ?? "")       // Ex: "0.6.0 (0600) - 1acdef3"
-            } ?? installedApp.localizedVersion
-            
-            #else
             var localizedVersion = installedApp.version
-            #endif
-                        
+            // Only show build version (and build revision) for non stable builds.
+            if !isStableBuild {
+                localizedVersion += buildInfo.project_version.map{ version in
+                    version.isEmpty  ? "" : " (\(version))" + (revision.isEmpty ? "" : " - \(revision)")
+                } ?? installedApp.localizedVersion
+            }
+            
             versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
         }
-        else if let version = Bundle.main.object(forInfoDictionaryKey: MARKETING_VERSION_KEY) as? String
+        else if let version = buildInfo.marketing_version
         {
             var version = "SideStore \(version)"
             
@@ -268,10 +258,11 @@ private extension SettingsViewController
             versionLabel = NSLocalizedString(version, comment: "SideStore Version")
         }
         
-        // add xcode build version if in debug mode
-        #if DEBUG
-        versionLabel += "\n\(getXcodeVersion())"
-        #endif
+        // add xcode build version for local builds
+        if buildInfo.channel == .local
+        {
+            versionLabel += "\n\(getXcodeVersion())"
+        }
 
         return versionLabel
     }

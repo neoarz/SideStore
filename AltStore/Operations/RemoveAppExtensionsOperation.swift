@@ -85,7 +85,7 @@ final class RemoveAppExtensionsOperation: ResultOperation<Void>
             presentingViewController.present(alertController, animated: true){
 
                 // if for any reason the view wasn't presented, then just signal that as error
-                if presentingViewController.presentedViewController == nil {
+                if presentingViewController.presentedViewController == nil && !alertController.isViewLoaded {
                     let errMsg = "RemoveAppExtensionsOperation: unable to present dialog, view context not available." +
                                  "\nDid you move to different screen or background after starting the operation?"
                     self.finish(.failure(

@@ -50,17 +50,55 @@ to force it to check for new binaries, run `bash ./SideStore/fetch-prebuilt.sh f
 ## Building an IPA for distribution
 
 Install cocoapods if required using: `brew install cocoapods`
-
 Now perform Pod-Install using: `pod install` command to install the dependencies.
 
-You can then use the Makefile command: `make build fakesign ipa` in the root directory.
-
+You can then use the Makefile command: `make build fakesign ipa` in the root directory.  
+By default the config for build is: `Release`  
+For debug builds: `export BUILD_CONFIG=Debug;make build fakesign ipa` in the root directory.  
+For alpha/beta builds: `export IS_ALPHA=1;` or `export IS_BETA=1;` before invoking the build command.  
 This will create SideStore.ipa.
+
+```sh
+Examples: 
+
+    # cocoapods
+    brew install cocoapods
+    # perform installation of the pods
+    pod install
+
+    # alpha release build
+    export IS_ALPHA=1;make build fakesign ipa
+    # alpha debug build
+    export IS_ALPHA=1;export BUILD_CONFIG=Debug;make build fakesign ipa
+
+    # beta release build
+    export IS_BETA=1;make build fakesign ipa
+    # beta debug build
+    export IS_BETA=1;export BUILD_CONFIG=Debug;make build fakesign ipa
+
+    # stable release build
+    make build fakesign ipa
+    # stable debug build
+    export BUILD_CONFIG=Debug;make build fakesign ipa
+```
+By default sidestore will build for its default bundleIdentifier `com.SideStore.SideStore` but if you need to set a custom bundleID for commandline builds, once can do so by exporting `BUNDLE_ID_SUFFIX` env var  
+```sh
+    # stable release build
+    export BUNDLE_ID_SUFFIX=XYZ0123456;make build fakesign ipa
+    # stable debug build
+    export BUNDLE_ID_SUFFIX=XYZ0123456;export BUILD_CONFIG=Debug;make build fakesign ipa
+```
+NOTE: When building from XCode, the `BUNDLE_ID_SUFFIX` is set by default with the value of `DEVELOPMENT_TEAM`  
+  
+This can be customized by setting/removing the BUNDLE_ID_SUFFIX in overriding CodeSigning.xcconfig created from CodeSigning.xcconfig.sample  
+  
+    
 
 > **Warning**
 >
 > The binary created will contain paths to Xcode's DerivedData, and if you built minimuxer on your machine, paths to $HOME/.cargo. This will include your username. If you want to keep your user's
 > username private, you might want to get GitHub Actions to build the IPA instead.
+> 
 
 ## Developing minimuxer alongside SideStore
 

@@ -65,13 +65,23 @@ class ToastView: RSTToastView
         self.opensErrorLog = opensLog
     }
 
-    convenience init(error: Error)
+    enum InfoMode: String {
+        case fullError
+        case localizedDescription
+    }
+    
+    convenience init(error: Error){
+        self.init(error: error, mode: .localizedDescription)
+    }
+    
+    convenience init(error: Error, mode: InfoMode)
     {
         let error = error as NSError
+        let mode = mode == .fullError ? ErrorProcessing.InfoMode.fullError : ErrorProcessing.InfoMode.localizedDescription
         
         let text = error.localizedTitle ?? NSLocalizedString("Operation Failed", comment: "")
-        let detailText = ErrorProcessing(.fullError).getDescription(error: error)
-
+        let detailText = ErrorProcessing(mode).getDescription(error: error)
+        
         self.init(text: text, detailText: detailText)
     }
     

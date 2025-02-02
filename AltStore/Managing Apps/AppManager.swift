@@ -593,30 +593,30 @@ extension AppManager
     
     func updatePatronsIfNeeded()
     {
-        guard self.operationQueue.operations.allSatisfy({ !($0 is UpdatePatronsOperation) }) else {
-            // There's already an UpdatePatronsOperation running.
-            return
-        }
-        
-        self.updatePatronsResult = nil
-        
-        let updatePatronsOperation = UpdatePatronsOperation()
-        updatePatronsOperation.resultHandler = { (result) in
-            do
-            {
-                try result.get()
-                self.updatePatronsResult = .success(())
-            }
-            catch
-            {
-                print("Error updating Friend Zone Patrons:", error)
-                self.updatePatronsResult = .failure(error)
-            }
-            
-            NotificationCenter.default.post(name: AppManager.didUpdatePatronsNotification, object: self)
-        }
-        
-        self.run([updatePatronsOperation], context: nil)
+//        guard self.operationQueue.operations.allSatisfy({ !($0 is UpdatePatronsOperation) }) else {
+//            // There's already an UpdatePatronsOperation running.
+//            return
+//        }
+//        
+//        self.updatePatronsResult = nil
+//        
+//        let updatePatronsOperation = UpdatePatronsOperation()
+//        updatePatronsOperation.resultHandler = { (result) in
+//            do
+//            {
+//                try result.get()
+//                self.updatePatronsResult = .success(())
+//            }
+//            catch
+//            {
+//                print("Error updating Friend Zone Patrons:", error)
+//                self.updatePatronsResult = .failure(error)
+//            }
+//            
+//            NotificationCenter.default.post(name: AppManager.didUpdatePatronsNotification, object: self)
+//        }
+//        
+//        self.run([updatePatronsOperation], context: nil)
     }
     
     func updateAllSources(completion: @escaping (Result<Void, Error>) -> Void)
@@ -634,6 +634,9 @@ extension AppManager
                 do
                 {
                     let (_, context) = try result.get()
+//                    print("\n\n\n\(context.insertedObjects)\n\n\n")
+//                    print("\n\n\n\(context.updatedObjects)\n\n\n")
+//                    print("\n\n\n\(context.deletedObjects)\n\n\n")
                     try context.save()
                     
                     DispatchQueue.main.async {
@@ -1228,13 +1231,17 @@ private extension AppManager
         }
         else
         {
-            DispatchQueue.main.schedule {
-                UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
+            // Disable the idleTimeout
+            if !UIApplication.shared.isIdleTimerDisabled {       // accept only once if concurrent
+                DispatchQueue.main.schedule {
+                    UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
+                }
             }
             performAppOperations()
-            DispatchQueue.main.schedule {
-                UIApplication.shared.isIdleTimerDisabled = false
-            }
+            // Moved to self.finish()
+//            DispatchQueue.main.schedule {
+//                UIApplication.shared.isIdleTimerDisabled = false
+//            }
         }
         
         return group
@@ -2095,6 +2102,16 @@ private extension AppManager
     
     func finish(_ operation: AppOperation, result: Result<InstalledApp, Error>, group: RefreshGroup, progress: Progress?)
     {
+        // Remove disableIdleTimeout
+        // TODO: This should disable for the last finish() request not the first though for batches
+        //       probably if we are in batch mode, we can count expected no of finishes() to arrive
+        //       and schedule disabling only on last request by matching it with count.
+        if UIApplication.shared.isIdleTimerDisabled {       // accept only once if concurrent
+            DispatchQueue.main.schedule {
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
+        }
+
         // Must remove before saving installedApp.
         if let currentProgress = self.progress(for: operation), currentProgress == progress
         {

@@ -155,11 +155,11 @@ struct VerificationError: ALTLocalizedError
             
         case .mismatchedVersion:
             let appName = self.$app.name ?? NSLocalizedString("the app", comment: "")
-            return String(format: NSLocalizedString("The downloaded version of %@ does not match the version specified by the source.", comment: ""), appName)
+            return String(format: NSLocalizedString("The downloaded version of %@ does not match the version specified by the source.\nExpected version: %@\nFound version: %@", comment: ""), appName, expectedVersion ?? "nil", version ?? "nil")
             
         case .mismatchedBuildVersion:
             let appName = self.$app.name ?? NSLocalizedString("the app", comment: "")
-            return String(format: NSLocalizedString("The downloaded version of %@ does not match the build number specified by the source.", comment: ""), appName)
+            return String(format: NSLocalizedString("The downloaded version of %@ does not match the build number specified by the source.\nExpected version: %@\nFound version: %@", comment: ""), appName, expectedVersion ?? "nil", version ?? "nil")
             
         case .undeclaredPermissions:
             let appName = self.$app.name ?? NSLocalizedString("The app", comment: "")
