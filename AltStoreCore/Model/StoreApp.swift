@@ -383,11 +383,11 @@ public class StoreApp: NSManagedObject, Decodable, Fetchable
             }
             else if let screenshotURLs = try container.decodeIfPresent([URL].self, forKey: .screenshotURLs)
             {
-                // Assume 9:16 iPhone 8 screen dimensions for legacy screenshotURLs.
-                let legacyAspectRatio = CGSize(width: 750, height: 1334)
+                // Update to iPhone 13 screen size
+                let modernAspectRatio = CGSize(width: 1170, height: 2532)
                 
                 appScreenshots = screenshotURLs.map { imageURL in
-                    let screenshot = AppScreenshot(imageURL: imageURL, size: legacyAspectRatio, deviceType: .iphone, context: context)
+                    let screenshot = AppScreenshot(imageURL: imageURL, size: modernAspectRatio, deviceType: .iphone, context: context)
                     return screenshot
                 }
             }
