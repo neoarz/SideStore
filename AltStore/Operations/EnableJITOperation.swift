@@ -264,4 +264,6 @@ func enableJITJitStreamerEB(serverURL: URL, installedApp: InstalledApp, completi
     }
     
     attemptJITEnable()
+
+    // Pls work
 }
