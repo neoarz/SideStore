@@ -37,7 +37,7 @@ protocol EnableJITContext
 }
 
 @available(iOS 14, *)
-final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
+final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>, @unchecked Sendable
 {
     let context: Context
     
