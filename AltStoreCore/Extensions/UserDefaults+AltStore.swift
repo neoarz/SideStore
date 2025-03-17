@@ -21,7 +21,9 @@ public extension UserDefaults
     @NSManaged var requiresAppGroupMigration: Bool
     @NSManaged var textServer: Bool
     @NSManaged var sidejitenable: Bool
+    @NSManaged var jitstreamereb: Bool
     @NSManaged var textInputSideJITServerurl: String?
+    @NSManaged var textInputJitStreamerEBurl: String?
     @NSManaged var textInputAnisetteURL: String?
     @NSManaged var customAnisetteURL: String?
     @NSManaged var menuAnisetteURL: String
@@ -146,6 +148,8 @@ public extension UserDefaults
             #keyPath(UserDefaults.permissionCheckingDisabled): permissionCheckingDisabled,
             #keyPath(UserDefaults._preferredAppSorting): preferredAppSorting.rawValue,
             #keyPath(UserDefaults.betaUdpatesTrack): defaultBetaUpdatesTrack,
+            #keyPath(UserDefaults.jitstreamereb): false,
+            #keyPath(UserDefaults.textInputJitStreamerEBurl): "http://[fd00::]:9172",
         ] as [String: Any]
         
         UserDefaults.standard.register(defaults: defaults)

@@ -37,7 +37,7 @@ protocol EnableJITContext
 }
 
 @available(iOS 14, *)
-final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
+final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>, @unchecked Sendable
 {
     let context: Context
     
@@ -264,4 +264,6 @@ func enableJITJitStreamerEB(serverURL: URL, installedApp: InstalledApp, completi
     }
     
     attemptJITEnable()
+
+    // Pls work
 }
